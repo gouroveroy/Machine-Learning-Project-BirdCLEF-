@@ -1,7 +1,7 @@
-# BirdCLEF 2025: Species Identification in Noisy Soundscapes
+# Species Identification in Noisy Soundscapes
 
 ## Project Overview
-This notebook implements a baseline deep learning model for identifying bird species from audio recordings in the BirdCLEF 2025 competition. The project uses audio signal processing techniques combined with computer vision models to classify bird calls from noisy environmental soundscapes.
+This notebook implements a baseline deep learning model for identifying bird species from audio recordings in noisy soundscapes. The project uses audio signal processing techniques combined with computer vision models to classify bird calls from noisy environmental soundscapes.
 
 ---
 
@@ -243,9 +243,9 @@ After running all cells successfully:
 
 ---
 
-## Competition Context
+## Context
 
-BirdCLEF 2025 challenges participants to identify bird species from short audio recordings in noisy, real-world environments. The dataset includes:
+In this project we need to identify bird species from short audio recordings in noisy, real-world environments. The dataset includes:
 - 206 different bird species
 - Thousands of audio recordings from various locations
 - Background noise from rain, wind, insects, and other birds
