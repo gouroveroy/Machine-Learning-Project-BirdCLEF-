@@ -86,7 +86,76 @@ Understanding the dataset distribution is crucial because:
 
 ---
 
-### **Cell 4: Create Custom Dataset and Audio Processing Pipeline**
+### **Cell 4: Generate and Save All Spectrograms**
+
+**What it does:**
+
+1. **Create Output Directory:**
+   - Sets up `/kaggle/working/spectrograms` directory
+   - Uses `Path().mkdir()` to create the directory structure
+   - `parents=True, exist_ok=True` ensures directories are created without errors
+
+2. **Process All Audio Files:**
+   - Iterates through every audio file in the dataset (all rows in `train.csv`)
+   - Shows a progress bar using `tqdm` to track processing status
+   - Handles thousands of files efficiently in a batch process
+
+3. **Organize by Species:**
+   - Creates a subdirectory for each species (e.g., `spectrograms/species1/`)
+   - Groups spectrograms by their primary_label for easy organization
+   - Makes it simple to count and review samples per species
+
+4. **Audio Processing (Same Pipeline as Training):**
+   - **Load Audio:** Reads the audio file using torchaudio
+   - **Resample:** Converts to 32kHz if needed for consistency
+   - **Crop/Pad:** Standardizes all audio to exactly 5 seconds
+     - Takes first 5 seconds if longer (for consistency in pre-processing)
+     - Pads with zeros if shorter
+   - **Generate Mel-Spectrogram:** Converts audio to 2D time-frequency representation
+   - **Convert to dB Scale:** Makes quiet sounds more visible
+
+5. **Save as Images:**
+   - Converts mel-spectrogram to numpy array
+   - Normalizes values to 0-255 range (standard image format)
+   - Saves as PNG files using OpenCV
+   - Filename matches original audio file (e.g., `audio123.ogg` → `audio123.png`)
+
+6. **Error Handling:**
+   - Wraps processing in try-except block
+   - Continues processing if one file fails
+   - Prints error messages for debugging
+
+7. **Summary Output:**
+   - Prints total number of spectrograms generated
+   - Shows output directory location
+   - Displays count of species folders created
+
+**Why it's important:**
+Pre-generating spectrograms offers several advantages:
+- **Faster Training:** No need to process audio on-the-fly during training
+- **Consistency:** All spectrograms processed the same way (deterministic cropping)
+- **Reusability:** Can use spectrograms for multiple experiments without reprocessing
+- **Disk Space vs Speed Trade-off:** Uses more disk space but dramatically speeds up training
+- **Debugging:** Can visually inspect spectrograms to verify quality
+- **Data Analysis:** Easy to browse and analyze spectrogram patterns per species
+
+**Output Directory Structure:**
+```
+spectrograms/
+├── species1/
+│   ├── audio1.png
+│   ├── audio2.png
+│   └── ...
+├── species2/
+│   ├── audio3.png
+│   └── ...
+└── species206/
+    └── ...
+```
+
+---
+
+### **Cell 5: Create Custom Dataset and Audio Processing Pipeline**
 
 **What it does:**
 
@@ -137,9 +206,11 @@ Understanding the dataset distribution is crucial because:
 **Why it's important:**
 This is the core data preprocessing pipeline. Converting audio to mel-spectrograms allows us to use powerful computer vision models (like EfficientNet) on audio data. The fixed duration ensures consistent input sizes, and the augmentation (random cropping) helps the model generalize better.
 
+**Note:** If you've already run Cell 4 to pre-generate spectrograms, you could modify this dataset class to load from saved PNG files instead of processing audio on-the-fly for faster training.
+
 ---
 
-### **Cell 5: Model Definition and Training**
+### **Cell 6: Model Definition and Training**
 
 **What it does:**
 
@@ -224,6 +295,7 @@ The validation split is essential for monitoring overfitting and ensuring the mo
 After running all cells successfully:
 - ✅ All required packages installed
 - ✅ Dataset loaded and visualized (showing class imbalance)
+- ✅ All spectrograms generated and saved to disk (organized by species)
 - ✅ Sample mel-spectrogram displayed (verifies audio processing works)
 - ✅ Model trained for 3 epochs
 - ✅ Training loss decreases over time
@@ -233,13 +305,14 @@ After running all cells successfully:
 
 ## Next Steps for Improvement
 
-1. **Add Validation Metrics:** Implement accuracy, F1-score tracking during training
-2. **Data Augmentation:** Add mixup, time/frequency masking for robustness
-3. **Handle Class Imbalance:** Use weighted sampling or focal loss
-4. **Longer Training:** Increase epochs with learning rate scheduling
-5. **Model Ensemble:** Combine predictions from multiple models
-6. **Larger Models:** Try EfficientNet-B3 or B4 for better accuracy
-7. **Test Time Augmentation:** Average predictions over multiple crops
+1. **Load Pre-Generated Spectrograms:** Modify dataset class to load from saved PNG files for 10x faster training
+2. **Add Validation Metrics:** Implement accuracy, F1-score tracking during training
+3. **Data Augmentation:** Add mixup, time/frequency masking for robustness
+4. **Handle Class Imbalance:** Use weighted sampling or focal loss
+5. **Longer Training:** Increase epochs with learning rate scheduling
+6. **Model Ensemble:** Combine predictions from multiple models
+7. **Larger Models:** Try EfficientNet-B3 or B4 for better accuracy
+8. **Test Time Augmentation:** Average predictions over multiple crops
 
 ---
 
