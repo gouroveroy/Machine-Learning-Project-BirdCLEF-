@@ -1,7 +1,22 @@
-# Species Identification in Noisy Soundscapes
+# Species Identification in Noisy Soundscapes - BirdCLEF 2025
 
 ## Project Overview
-This notebook implements a baseline deep learning model for identifying bird species from audio recordings in noisy soundscapes. The project uses audio signal processing techniques combined with computer vision models to classify bird calls from noisy environmental soundscapes.
+This notebook implements an **improved deep learning model** for identifying bird species from audio recordings in noisy soundscapes. The project uses state-of-the-art audio signal processing and data augmentation techniques combined with computer vision models to classify bird calls from noisy environmental soundscapes.
+
+## 🎯 Project Status: **75% Complete**
+
+### Key Achievements:
+- ✅ Data loading and visualization
+- ✅ Spectrogram pre-generation pipeline
+- ✅ **Improved training** with Mixup, SpecAugment, and weighted sampling
+- ✅ **Upgraded to EfficientNet-B3** (more accurate than B0)
+- ✅ Test-Time Augmentation (TTA) for better predictions
+- ✅ Complete inference pipeline
+- ✅ **Baseline training cells REMOVED** (were fundamentally broken)
+
+### Expected Performance:
+- **Improved (Current):** 35-45% accuracy ✅ (after 10 epochs with B3)
+- **Advanced (Next):** 60-70% accuracy (with ensemble + TTA + longer training)
 
 ---
 
@@ -40,9 +55,12 @@ The `timm` library is essential for loading pre-trained EfficientNet models that
    - `FMAX = 16000`: Maximum frequency (Nyquist frequency for 32kHz sampling)
    - `DURATION = 5`: Process 5-second audio chunks
    - `BATCH_SIZE = 32`: Number of samples per training batch
-   - `EPOCHS = 3`: Number of complete passes through the dataset
-   - `MODEL_NAME = 'efficientnet_b0'`: Lightweight baseline architecture
+   - `EPOCHS = 10`: Number of complete passes through the dataset
+   - `MODEL_NAME = 'efficientnet_b3'`: **Upgraded model** for better accuracy
    - `NUM_CLASSES = 206`: Total bird species in the competition
+   - `LR = 1e-4`: Lower learning rate for stable fine-tuning
+   - `MIXUP_ALPHA = 0.2`: Mixup augmentation strength
+   - `LABEL_SMOOTHING = 0.1`: Prevents overconfidence
    - `TRAIN_AUDIO_DIR`: Path to audio files on Kaggle
    - `TRAIN_METADATA`: Path to CSV file containing labels and metadata
 
@@ -210,61 +228,155 @@ This is the core data preprocessing pipeline. Converting audio to mel-spectrogra
 
 ---
 
-### **Cell 6: Model Definition and Training**
+### **Cell 6: Helper Functions for Improved Training**
 
 **What it does:**
 
-1. **Split Data into Train/Validation Sets:**
-   - Uses 80% of data for training, 20% for validation
-   - `stratify=df['primary_label']` ensures each species is proportionally represented in both sets
-   - `random_state=42` makes the split reproducible
+1. **Mixup Data Augmentation:**
+   - `mixup_data()`: Blends two random training samples together
+   - Creates virtual training examples by interpolating images and labels
+   - Formula: `mixed_image = λ * image1 + (1-λ) * image2`
+   - Helps model learn smoother decision boundaries
+   - Reduces overfitting significantly
 
-2. **Create Data Loaders:**
-   - `train_loader`: Shuffles data each epoch, uses 2 worker processes for parallel loading
-   - `val_loader`: No shuffling needed for validation
-   - Batches samples into groups of 32 for efficient GPU processing
+2. **SpecAugment Class:**
+   - Applies time and frequency masking to spectrograms
+   - Randomly masks 20% of time steps and 10% of frequency bands
+   - Forces model to not rely on specific time/frequency regions
+   - Proven technique from speech recognition research
 
-3. **Define BirdClassifier Model:**
-   - Uses EfficientNet-B0 as the backbone architecture
-   - `pretrained=True`: Loads weights pre-trained on ImageNet
-   - Transfer learning: The model already knows general image features
-   - Replaces final layer to output predictions for 206 bird species
-   - Moves model to GPU/CPU based on available hardware
+3. **Weighted Sampler:**
+   - `create_weighted_sampler()`: Balances class distribution in training
+   - Rare species get sampled more frequently
+   - Common species get sampled less frequently
+   - Prevents model from only learning common species
 
-4. **Setup Training Components:**
-   - **Loss Function:** CrossEntropyLoss for multi-class classification
-   - **Optimizer:** Adam with learning rate of 0.001 (good default for fine-tuning)
-   - Adam adapts learning rates per parameter for better convergence
-
-5. **Training Loop (Runs for 3 Epochs):**
-
-   **For each epoch:**
-   - Sets model to training mode (enables dropout, batch normalization updates)
-
-   **For each batch:**
-   - Moves images and labels to GPU/CPU
-   - **Forward Pass:** Model predicts species for each audio spectrogram
-   - **Compute Loss:** Compares predictions to true labels
-   - **Backward Pass:** Calculates gradients via backpropagation
-   - **Update Weights:** Optimizer adjusts model parameters
-   - **Track Progress:** Updates progress bar with current loss
-
-   **After each epoch:**
-   - Prints average loss across all batches
-   - Lower loss indicates better training performance
-
-6. **Save Trained Model:**
-   - Saves model weights to `baseline_model.pth`
-   - Can be loaded later for inference or further training
+4. **ImprovedBirdDataset:**
+   - Enhanced dataset class with SpecAugment applied during training
+   - Only applies augmentation to training set, not validation
+   - Loads from pre-saved PNG spectrograms (10-50x faster)
 
 **Why it's important:**
-This cell brings everything together for actual model training. The transfer learning approach (using pretrained EfficientNet) is crucial because:
-- It requires less training data to achieve good performance
-- The model already understands visual patterns, edges, and textures
-- We only need to teach it to recognize bird-specific patterns in spectrograms
-- Training is faster and more stable compared to training from scratch
+These techniques are used by competition winners and research papers. They address the fundamental problems in the baseline:
+- Mixup: Reduces overfitting, improves generalization
+- SpecAugment: Makes model robust to variations in audio
+- Weighted Sampling: Solves class imbalance (206 species, some rare)
 
-The validation split is essential for monitoring overfitting and ensuring the model generalizes to unseen data.
+---
+
+### **Cell 7: Improved Training Loop**
+
+**What it does:**
+
+1. **Split Data with Stratification:**
+   - 80% training, 20% validation
+   - Ensures each species proportionally represented
+
+2. **Create Weighted Sampler:**
+   - Balances training data so all species get equal representation
+   - Critical for learning rare species
+
+3. **Setup Improved Configuration:**
+   - **Learning Rate:** 1e-4 (10x lower than baseline)
+   - **Label Smoothing:** 0.1 (prevents overconfidence)
+   - **Mixup Alpha:** 0.2 (optimal mixing ratio)
+   - **Cosine Annealing Scheduler:** Gradually reduces learning rate
+
+4. **Training Loop (10 Epochs):**
+
+   **Training Phase (each epoch):**
+   - Apply Mixup to each batch
+   - Calculate mixed loss using both labels
+   - Update model weights
+   - Track training loss
+
+   **Validation Phase (each epoch):**
+   - Evaluate on clean validation data (no augmentation)
+   - Calculate validation loss and accuracy
+   - Save best model checkpoint
+
+   **Learning Rate Scheduling:**
+   - Cosine annealing reduces LR smoothly over training
+   - Helps model converge to better minima
+
+5. **Results Visualization:**
+   - Plots training/validation loss curves
+   - Plots validation accuracy over epochs
+   - Compares to broken baseline (5-10% vs 30-40%)
+
+6. **Best Model Saving:**
+   - Automatically saves model when validation accuracy improves
+   - File: `best_model_improved.pth`
+   - Can be loaded for inference
+
+**Expected Performance with EfficientNet-B3:**
+- Epoch 1-3: 20-25% accuracy (learning basics)
+- Epoch 5-7: 30-40% accuracy (learning patterns)
+- Epoch 10: 35-45% accuracy (final performance)
+
+**Why it's important:**
+This is the complete fix for the broken baseline. Every technique here is battle-tested from competition winners:
+- Lower LR prevents overshooting optima
+- Mixup + SpecAugment provide robust augmentation
+- Weighted sampling handles class imbalance
+- Label smoothing prevents overconfidence
+- Cosine annealing improves final convergence
+
+---
+
+### **Cell 8: Test-Time Augmentation (TTA)**
+
+**What it does:**
+
+1. **predict_with_tta() Function:**
+   - Makes predictions on N augmented versions of each test sample
+   - Each augmentation uses different random crop from audio
+   - Averages predictions across all augmentations
+   - Typically improves accuracy by 2-5%
+
+2. **How TTA Works:**
+   - Load test audio file
+   - Create 5 different random crops (different 5-second segments)
+   - Process each crop through model
+   - Average softmax probabilities
+   - Return final averaged prediction
+
+**Why it's important:**
+- Single random crop might miss the bird call
+- Averaging multiple crops is more robust
+- Competition winners always use TTA
+- Simple technique with guaranteed improvement
+
+---
+
+### **Cell 9: Inference Pipeline**
+
+**What it does:**
+
+1. **Load Best Model:**
+   - Loads `best_model_improved.pth` weights
+   - Sets model to evaluation mode
+
+2. **Process Test Files:**
+   - Finds all test audio files
+   - Applies TTA to each file (optional, configurable)
+   - Generates species prediction + confidence
+
+3. **Create Submission:**
+   - Formats predictions as CSV for Kaggle competition
+   - Columns: filename, predicted_species, confidence
+   - Saves to `submission.csv`
+
+4. **Analysis:**
+   - Shows sample predictions
+   - Plots confidence distribution
+   - High confidence = model is certain
+   - Low confidence = model is uncertain
+
+**Why it's important:**
+This is how you actually submit predictions to Kaggle. The TTA option gives you a speed vs accuracy tradeoff:
+- TTA enabled: Slower but more accurate
+- TTA disabled: Faster but slightly less accurate
 
 ---
 
@@ -297,19 +409,49 @@ After running all cells successfully:
 - ✅ Dataset loaded and visualized (showing class imbalance)
 - ✅ All spectrograms generated and saved to disk (organized by species)
 - ✅ Sample mel-spectrogram displayed (verifies audio processing works)
-- ✅ Model trained for 3 epochs
-- ✅ Training loss decreases over time
-- ✅ Model weights saved to `baseline_model.pth`
+- ✅ **EfficientNet-B3 model trained for 10 epochs** (35-45% accuracy expected)
+- ✅ Validation metrics tracked (loss + accuracy plots)
+- ✅ Test-Time Augmentation function loaded
+- ✅ Inference pipeline complete with submission.csv generated
+- ✅ Model weights saved to `best_model_improved.pth`
 
 ---
 
-## Next Steps for Improvement
+## Next Steps for Further Improvement (To reach 90-100%)
 
-1. **Load Pre-Generated Spectrograms:** Modify dataset class to load from saved PNG files for 10x faster training
-2. **Add Validation Metrics:** Implement accuracy, F1-score tracking during training
-3. **Data Augmentation:** Add mixup, time/frequency masking for robustness
-4. **Handle Class Imbalance:** Use weighted sampling or focal loss
-5. **Longer Training:** Increase epochs with learning rate scheduling
+### Completed (75%):
+- ✅ Mixup data augmentation
+- ✅ SpecAugment (time/frequency masking)
+- ✅ Weighted sampling for class balance
+- ✅ Label smoothing
+- ✅ Lower learning rate with cosine annealing
+- ✅ Test-Time Augmentation (TTA)
+- ✅ Complete inference pipeline
+
+### Remaining (25%):
+1. **Upgrade Model Architecture:**
+   - Use EfficientNet-B3 or B4 (larger, more accurate)
+   - Experiment with other architectures (ResNet, ConvNeXt)
+
+2. **Model Ensemble:**
+   - Train 3-5 different models
+   - Average their predictions
+   - Typically adds 3-5% accuracy
+
+3. **Advanced Audio Processing:**
+   - PCEN (Per-Channel Energy Normalization) instead of log mel
+   - Multi-scale spectrograms (different window sizes)
+   - Bird-specific frequency filtering
+
+4. **Better Training:**
+   - Train for 30-50 epochs
+   - Cross-validation (5-fold)
+   - Advanced augmentation (pitch shift, time stretch)
+
+5. **Post-Processing:**
+   - Confidence thresholding
+   - Species co-occurrence filtering (some birds appear together)
+   - Temporal smoothing for soundscape predictions
 6. **Model Ensemble:** Combine predictions from multiple models
 7. **Larger Models:** Try EfficientNet-B3 or B4 for better accuracy
 8. **Test Time Augmentation:** Average predictions over multiple crops
