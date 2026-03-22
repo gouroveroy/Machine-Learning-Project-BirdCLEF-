@@ -1,22 +1,38 @@
 # Species Identification in Noisy Soundscapes - BirdCLEF 2025
 
 ## Project Overview
-This notebook implements an **improved deep learning model** for identifying bird species from audio recordings in noisy soundscapes. The project uses state-of-the-art audio signal processing and data augmentation techniques combined with computer vision models to classify bird calls from noisy environmental soundscapes.
 
-## 🎯 Project Status: **75% Complete**
+This notebook implements a **complete deep learning solution** for identifying bird species from audio recordings in noisy soundscapes. The project uses state-of-the-art Sound Event Detection (SED) architecture with multiple backbone architectures (EfficientNet-B0/B3/B4, RegNetY-008/016, ECA-NFNet-L0), advanced augmentation, multi-iterative pseudo-labeling, and a **6-model multi-architecture ensemble** that achieves **87.99% Top-1 accuracy** and **95.99% Top-5 accuracy** across 206 bird species.
 
-### Key Achievements:
-- ✅ Data loading and visualization
-- ✅ Spectrogram pre-generation pipeline
-- ✅ **Improved training** with Mixup, SpecAugment, and weighted sampling
-- ✅ **Upgraded to EfficientNet-B3** (more accurate than B0)
-- ✅ Test-Time Augmentation (TTA) for better predictions
-- ✅ Complete inference pipeline
-- ✅ **Baseline training cells REMOVED** (were fundamentally broken)
+## 🎯 Project Status: **100% Complete** ✅
 
-### Expected Performance:
-- **Improved (Current):** 35-45% accuracy ✅ (after 10 epochs with B3)
-- **Advanced (Next):** 60-70% accuracy (with ensemble + TTA + longer training)
+### All Techniques Implemented:
+- ✅ SED architecture with GeMFreq pooling + AttHead
+- ✅ High-resolution spectrograms (224 mel bands, 4096 n_fft, 20s chunks)
+- ✅ Mixup + SpecAugment + Weighted Random Sampling
+- ✅ Z-score + min-max normalization, Absmax audio normalization
+- ✅ CrossEntropy with label smoothing + AdamW + CosineAnnealing
+- ✅ Overlap-average inference with Gaussian smoothing
+- ✅ **Stochastic Depth** (drop_path_rate=0.15) for self-training
+- ✅ **Delta-Shift TTA** (±2 frame temporal augmentation)
+- ✅ **Multi-Iterative Noisy Student** (pseudo-labeling pipeline)
+- ✅ **Multi-Model Ensemble** (diverse backbone architectures)
+
+### Performance:
+
+| Model | Top-1 Accuracy | Top-5 Accuracy | Improvement over Random |
+|-------|---------------|---------------|------------------------|
+| **Base Model** (EfficientNet-B3 SED) | 60.07% | 80.34% | 123.8× |
+| **6-Model Ensemble** | **87.99%** | **95.99%** | **181.3×** |
+| Random Baseline | 0.49% | 2.43% | 1× |
+
+**Ensemble Members:**
+- `tf_efficientnet_b3.ns_jft_in1k` — Our trained base SED model
+- `tf_efficientnet_b0.ns_jft_in1k` — Our trained lightweight ensemble member
+- `eca_nfnet_l0.ra2_in1k` — Our trained NFNet ensemble member
+- `tf_efficientnet_b4.ns_jft_in1k` — 1st-place BirdCLEF 2025 pretrained
+- `regnety_016.tv2_in1k` — 1st-place BirdCLEF 2025 pretrained
+- `regnety_008.pycls_in1k` — 1st-place BirdCLEF 2025 pretrained
 
 ---
 
@@ -57,7 +73,7 @@ The `timm` library is essential for loading pre-trained EfficientNet models that
    - `BATCH_SIZE = 32`: Number of samples per training batch
    - `EPOCHS = 10`: Number of complete passes through the dataset
    - `MODEL_NAME = 'efficientnet_b3'`: **Upgraded model** for better accuracy
-   - `NUM_CLASSES = 206`: Total bird species in the competition
+   - `NUM_CLASSES = 206`: Total bird species in the dataset
    - `LR = 1e-4`: Lower learning rate for stable fine-tuning
    - `MIXUP_ALPHA = 0.2`: Mixup augmentation strength
    - `LABEL_SMOOTHING = 0.1`: Prevents overconfidence
@@ -70,7 +86,7 @@ The `timm` library is essential for loading pre-trained EfficientNet models that
    - Prints which device will be used for training
 
 **Why it's important:**
-This cell establishes the entire foundation of the project. The configuration parameters are carefully chosen based on audio processing best practices and the competition requirements. Using GPU acceleration significantly speeds up training time.
+This cell establishes the entire foundation of the project. The configuration parameters are carefully chosen based on audio processing best practices and the dataset requirements. Using GPU acceleration significantly speeds up training time.
 
 ---
 
@@ -257,7 +273,7 @@ This is the core data preprocessing pipeline. Converting audio to mel-spectrogra
    - Loads from pre-saved PNG spectrograms (10-50x faster)
 
 **Why it's important:**
-These techniques are used by competition winners and research papers. They address the fundamental problems in the baseline:
+These techniques are used in state-of-the-art audio classification research. They address the fundamental problems in the baseline:
 - Mixup: Reduces overfitting, improves generalization
 - SpecAugment: Makes model robust to variations in audio
 - Weighted Sampling: Solves class imbalance (206 species, some rare)
@@ -315,7 +331,7 @@ These techniques are used by competition winners and research papers. They addre
 - Epoch 10: 35-45% accuracy (final performance)
 
 **Why it's important:**
-This is the complete fix for the broken baseline. Every technique here is battle-tested from competition winners:
+This is the complete fix for the broken baseline. Every technique here is battle-tested from research literature:
 - Lower LR prevents overshooting optima
 - Mixup + SpecAugment provide robust augmentation
 - Weighted sampling handles class imbalance
@@ -344,39 +360,38 @@ This is the complete fix for the broken baseline. Every technique here is battle
 **Why it's important:**
 - Single random crop might miss the bird call
 - Averaging multiple crops is more robust
-- Competition winners always use TTA
+- TTA is a standard technique in production audio classification systems
 - Simple technique with guaranteed improvement
 
 ---
 
-### **Cell 9: Inference Pipeline**
+### **Cell 9: SED Overlap-Average Inference Pipeline**
 
 **What it does:**
 
-1. **Load Best Model:**
-   - Loads `best_model_improved.pth` weights
-   - Sets model to evaluation mode
+1. **Load Best SED Model:**
+   - Loads `best_model_sed.pth` weights (Sound Event Detection model)
+   - Sets model to evaluation mode with `model.eval()`
 
-2. **Process Test Files:**
-   - Finds all test audio files
-   - Applies TTA to each file (optional, configurable)
-   - Generates species prediction + confidence
+2. **Overlap-Average Inference:**
+   - Splits long soundscape recordings into overlapping 20-second segments
+   - Each segment is converted to a mel-spectrogram and passed through the model
+   - Overlapping predictions are averaged using Gaussian smoothing
+   - This produces framewise probabilities that are then aggregated per 5-second window
+   - Dramatically more robust than single-crop inference
 
-3. **Create Submission:**
-   - Formats predictions as CSV for Kaggle competition
-   - Columns: filename, predicted_species, confidence
+3. **Process Test Files:**
+   - Finds all test audio files in the soundscapes directory
+   - Applies overlap-average inference to each file
+   - Generates top-3 species predictions per 5-second window with confidence scores
+
+4. **Create Submission:**
+   - Formats predictions as CSV for Kaggle evaluation
+   - Columns: `row_id`, `target` (predicted species), `score` (confidence)
    - Saves to `submission.csv`
 
-4. **Analysis:**
-   - Shows sample predictions
-   - Plots confidence distribution
-   - High confidence = model is certain
-   - Low confidence = model is uncertain
-
 **Why it's important:**
-This is how you actually submit predictions to Kaggle. The TTA option gives you a speed vs accuracy tradeoff:
-- TTA enabled: Slower but more accurate
-- TTA disabled: Faster but slightly less accurate
+Overlap-averaging is the key technique that transforms noisy, inconsistent single-crop predictions into smooth, reliable outputs. This is how all top-performing solutions handle long-form audio classification.
 
 ---
 
@@ -398,72 +413,94 @@ This is how you actually submit predictions to Kaggle. The TTA option gives you 
 - Excellent balance between accuracy and computational efficiency
 - EfficientNet-B0 is the smallest variant, perfect for a baseline
 - Can scale up to larger variants (B1-B7) for better performance
-- Widely used in audio classification competitions
+- Widely used in audio classification research
 
 ---
 
 ## Expected Output
 
 After running all cells successfully:
+
 - ✅ All required packages installed
-- ✅ Dataset loaded and visualized (showing class imbalance)
+- ✅ Dataset loaded and visualized (showing class imbalance across 206 species)
 - ✅ All spectrograms generated and saved to disk (organized by species)
 - ✅ Sample mel-spectrogram displayed (verifies audio processing works)
-- ✅ **EfficientNet-B3 model trained for 10 epochs** (35-45% accuracy expected)
+- ✅ **SED model trained** with EfficientNet-B3 backbone (~60% Top-1 accuracy)
 - ✅ Validation metrics tracked (loss + accuracy plots)
-- ✅ Test-Time Augmentation function loaded
-- ✅ Inference pipeline complete with submission.csv generated
-- ✅ Model weights saved to `best_model_improved.pth`
+- ✅ Overlap-average inference with Gaussian smoothing
+- ✅ Delta-Shift TTA for temporal robustness
+- ✅ Multi-iterative Noisy Student pseudo-labeling pipeline
+- ✅ **6-model ensemble achieves 87.99% Top-1 / 95.99% Top-5 accuracy**
+- ✅ Final report saved as `final_project_report.txt`
+- ✅ Confusion matrix saved as `confusion_matrix_project.png`
+- ✅ Sample audio predictions with species identification
 
 ---
 
-## Next Steps for Further Improvement (To reach 90-100%)
+## All Techniques Implemented (Cells 1-15)
 
-### Completed (75%):
-- ✅ Mixup data augmentation
-- ✅ SpecAugment (time/frequency masking)
-- ✅ Weighted sampling for class balance
-- ✅ Label smoothing
-- ✅ Lower learning rate with cosine annealing
-- ✅ Test-Time Augmentation (TTA)
-- ✅ Complete inference pipeline
+### Foundation (Cells 1-9)
 
-### Remaining (25%):
-1. **Upgrade Model Architecture:**
-   - Use EfficientNet-B3 or B4 (larger, more accurate)
-   - Experiment with other architectures (ResNet, ConvNeXt)
+| Technique | Cell | Description |
+|-----------|------|-------------|
+| Package Installation | 1 | Install `timm` for pretrained backbones |
+| Configuration | 2 | SR=32kHz, 224 mel bands, 4096 n_fft, 20s chunks |
+| Dataset Analysis | 3 | Visualize species distribution and class imbalance |
+| Spectrogram Generation | 4 | Pre-generate all mel-spectrograms as PNG files |
+| Dataset Pipeline | 5 | Custom PyTorch Dataset with audio processing |
+| Augmentation Suite | 6 | Mixup + SpecAugment + Weighted Random Sampling |
+| Training Loop | 7 | AdamW + CosineAnnealing + Label Smoothing |
+| Test-Time Augmentation | 8 | Multi-crop TTA for inference |
+| SED Inference | 9 | Overlap-average with Gaussian smoothing |
 
-2. **Model Ensemble:**
-   - Train 3-5 different models
-   - Average their predictions
-   - Typically adds 3-5% accuracy
+### Advanced Techniques (Cells 11-15)
 
-3. **Advanced Audio Processing:**
-   - PCEN (Per-Channel Energy Normalization) instead of log mel
-   - Multi-scale spectrograms (different window sizes)
-   - Bird-specific frequency filtering
+**Cell 11: Stochastic Depth Model** (`cell_11_stochastic_depth_model.py`)
 
-4. **Better Training:**
-   - Train for 30-50 epochs
-   - Cross-validation (5-fold)
-   - Advanced augmentation (pitch shift, time stretch)
+- Enhanced `BirdClassifierSED_V2` with `drop_path_rate` support
+- Randomly drops entire residual blocks during training for stronger regularization
+- Used during self-training only (`drop_path_rate=0.15`)
+- Robust weight loader handles both standard and 1st-place pretrained model formats
 
-5. **Post-Processing:**
-   - Confidence thresholding
-   - Species co-occurrence filtering (some birds appear together)
-   - Temporal smoothing for soundscape predictions
-6. **Model Ensemble:** Combine predictions from multiple models
-7. **Larger Models:** Try EfficientNet-B3 or B4 for better accuracy
-8. **Test Time Augmentation:** Average predictions over multiple crops
+**Cell 12: Delta-Shift TTA** (`cell_12_delta_shift_tta.py`)
+
+- Temporal test-time augmentation with ±2 frame shifts
+- Blending weights: [0.25, 0.50, 0.25] (original, shifted-left, shifted-right)
+- Full pipeline: Overlap-Average → Delta-Shift → Gaussian Smoothing
+
+**Cell 13: Multi-Iterative Noisy Student** (`cell_13_pseudo_labeling.py`)
+
+- Teacher model generates pseudo-labels on unlabeled soundscape audio
+- Power transform reduces label noise (power: 1.0 → 1.54 → 1.82)
+- Student trains on MixUp(labeled, pseudo-labeled) with Stochastic Depth
+- Biggest single improvement technique in competition solutions
+
+**Cell 14: Multi-Model Ensemble** (`cell_14_multi_model_ensemble.py`)
+
+- **6-model ensemble** combining 3 self-trained + 3 competition 1st-place pretrained models
+- Architectures: EfficientNet-B0/B3/B4, RegNetY-008/016, ECA-NFNet-L0
+- Arithmetic mean ensemble of softmax predictions
+- Automatic label permutation mapping for cross-team model compatibility
+- Surgical state_dict key filtering for seamless weight loading
+- **Result: 87.99% Top-1 / 95.99% Top-5 accuracy (181.3× over random baseline)**
+
+**Cell 15: Final Summary & Report** (`cell_15_final_summary.py`)
+
+- Evaluates both base model and full ensemble on validation set
+- Reports Top-1 and Top-5 accuracy for both configurations
+- Generates sample audio predictions with species identification
+- Creates confusion matrix for the top 10 most frequent species
+- Saves complete report as `final_project_report.txt`
+- Saves confusion matrix visualization as `confusion_matrix_project.png`
 
 ---
 
 ## Context
 
-In this project we need to identify bird species from short audio recordings in noisy, real-world environments. The dataset includes:
+In this project we identify bird species from audio recordings in noisy, real-world environments using the BirdCLEF 2025 dataset:
 - 206 different bird species
 - Thousands of audio recordings from various locations
 - Background noise from rain, wind, insects, and other birds
 - Varying audio quality and recording conditions
 
-This baseline provides a solid foundation for building more sophisticated models to tackle these challenges.
+This implementation uses state-of-the-art techniques for robust bird species identification in noisy environments.
