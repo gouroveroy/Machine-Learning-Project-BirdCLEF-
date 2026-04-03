@@ -48,8 +48,8 @@
         enhanced,
         colback=draculacurrent,
         colframe=draculapurple,
-        coltitle=draculapurple!20!white,
-        colupper=draculafg, % Explicitly light text
+        coltitle=draculabg, % Dark text on vibrant frame for maximum contrast
+        colupper=draculafg, 
         fonttitle=\bfseries\large,
         sharp corners=southwest,
         boxrule=1.5pt,
@@ -61,8 +61,8 @@
         enhanced,
         colback=draculacurrent,
         colframe=draculagreen,
-        coltitle=draculagreen!20!white,
-        colupper=draculafg, % Explicitly light text
+        coltitle=draculabg, % Dark text on vibrant frame
+        colupper=draculafg, 
         fonttitle=\bfseries\large,
         sharp corners=southwest,
         boxrule=1.5pt,
@@ -74,8 +74,8 @@
         enhanced,
         colback=draculacurrent,
         colframe=draculaorange,
-        coltitle=draculaorange!20!white,
-        colupper=draculafg, % Explicitly light text
+        coltitle=draculabg, % Dark text on vibrant frame
+        colupper=draculafg, 
         fonttitle=\bfseries\large,
         sharp corners=southwest,
         boxrule=1.5pt,
@@ -89,9 +89,9 @@
 % TikZ Styles (Modernized)
 % ============================================
 \tikzset{
-    sedbox/.style={rectangle, draw=draculapurple, fill=draculacurrent, rounded corners=3pt, line width=1pt, minimum width=2.5cm, minimum height=0.8cm, align=center, font=\footnotesize, text=draculafg, drop shadow={shadow xshift=1pt, shadow yshift=-1pt, opacity=0.3}},
-    greenbox/.style={rectangle, draw=draculagreen, fill=draculacurrent, rounded corners=3pt, line width=1pt, minimum width=2.5cm, minimum height=0.8cm, align=center, font=\footnotesize, text=draculafg, drop shadow={shadow xshift=1pt, shadow yshift=-1pt, opacity=0.3}},
-    orangebox/.style={rectangle, draw=draculaorange, fill=draculacurrent, rounded corners=3pt, line width=1pt, minimum width=2.5cm, minimum height=0.8cm, align=center, font=\footnotesize, text=draculafg, drop shadow={shadow xshift=1pt, shadow yshift=-1pt, opacity=0.3}},
+    sedbox/.style={rectangle, draw=draculapurple, fill=draculapurple!15, rounded corners=3pt, line width=1pt, minimum width=2.5cm, minimum height=0.8cm, align=center, font=\footnotesize\bfseries, text=draculabg, drop shadow={shadow xshift=1pt, shadow yshift=-1pt, opacity=0.3}},
+    greenbox/.style={rectangle, draw=draculagreen, fill=draculagreen!15, rounded corners=3pt, line width=1pt, minimum width=2.5cm, minimum height=0.8cm, align=center, font=\footnotesize\bfseries, text=draculabg, drop shadow={shadow xshift=1pt, shadow yshift=-1pt, opacity=0.3}},
+    orangebox/.style={rectangle, draw=draculaorange, fill=draculaorange!15, rounded corners=3pt, line width=1pt, minimum width=2.5cm, minimum height=0.8cm, align=center, font=\footnotesize\bfseries, text=draculabg, drop shadow={shadow xshift=1pt, shadow yshift=-1pt, opacity=0.3}},
     sednote/.style={rectangle, draw=draculacomment, fill=draculabg, rounded corners=2pt, line width=0.5pt, minimum width=2cm, align=left, font=\scriptsize, text=draculacyan, opacity=0.95},
     sedarrow/.style={-Stealth, thick, color=draculacyan, line width=1.2pt}
 }
@@ -261,6 +261,32 @@
 
             \begin{tcolorbox}[greenbox_tcb={Evaluation}]
                 \footnotesize Micro-averaged F1 Score $\cdot$ Top-1/5 Acc
+            \end{tcolorbox}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% ------------------------------------------
+% Class Distribution (Long-Tail)
+% ------------------------------------------
+\begin{frame}{Class Distribution: The Long-Tail Problem}
+    \centering
+    \begin{tcolorbox}[draculabox={Species Sample Counts}, width=0.8\textwidth, top=0pt, bottom=0pt]
+        \includegraphics[width=\linewidth, height=0.35\textheight, keepaspectratio]{class_distribution.png}
+    \end{tcolorbox}
+    
+    \vspace{-0.1cm}
+    \begin{columns}[T, onlytextwidth]
+        \begin{column}{0.48\textwidth}
+            \begin{tcolorbox}[orangebox_tcb={The Challenge}, height=1.8cm]
+                \scriptsize 
+                \textbullet\ \textbf{Head}: Common species have dense data.\\
+                \textbullet\ \textbf{Tail}: Rare species have sparse data ($<$ 10).
+            \end{tcolorbox}
+        \end{column}
+        \begin{column}{0.48\textwidth}
+            \begin{tcolorbox}[greenbox_tcb={Strategic Response}, height=1.8cm]
+                \scriptsize \textbullet\ \textbf{Weighted Random Sampling} ensures fair exposure to rare classes during training.
             \end{tcolorbox}
         \end{column}
     \end{columns}
