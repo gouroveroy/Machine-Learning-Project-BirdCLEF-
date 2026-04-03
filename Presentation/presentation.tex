@@ -420,7 +420,7 @@
         \begin{column}{0.32\textwidth}
             \begin{tcolorbox}[draculabox={SpecAug}, height=5.2cm]
                 \begin{center}
-                    \begin{tikzpicture}[scale=0.6]
+                    \begin{tikzpicture}[scale=0.5]
                         % Spectrogram
                         \draw[draw=draculapurple, fill=draculapurple!20, rounded corners=2pt] (0,0) rectangle (3,2.5);
                         % Time mask
@@ -431,10 +431,11 @@
                         \node[text=draculabg, font=\bfseries\tiny] at (1.5,1.65) {Freq Mask};
                     \end{tikzpicture}
                 \end{center}
-                \footnotesize 
+                \scriptsize 
                 \begin{itemize}
-                    \item \small Time: 20\% masked
-                    \item \small Freq: 10\% masked
+                    \setlength{\itemsep}{0pt}
+                    \item Time: 20\% masked
+                    \item Freq: 10\% masked
                 \end{itemize}
                 \centering \textbf{\textcolor{draculagreen}{+1.5\% Acc}}
             \end{tcolorbox}
