@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="980" viewBox="0 0 1200 980">
+  <defs>
+    <style>
+      .bg { fill: #fcfcfd; }
+      .title { font: 700 34px Arial, sans-serif; fill: #1e293b; }
+      .subtitle { font: 400 16px Arial, sans-serif; fill: #475569; }
+      .box { fill: #eef6ff; stroke: #5b9cf6; stroke-width: 2.2; rx: 18; ry: 18; }
+      .note { fill: #f8fafc; stroke: #94a3b8; stroke-width: 1.8; rx: 16; ry: 16; }
+      .boxtitle { font: 700 18px Arial, sans-serif; fill: #0f172a; }
+      .body { font: 400 15px Arial, sans-serif; fill: #334155; }
+      .small { font: 400 14px Arial, sans-serif; fill: #475569; }
+      .arrow { stroke: #475569; stroke-width: 2.8; fill: none; marker-end: url(#arrow); }
+    </style>
+    <marker id="arrow" markerWidth="11" markerHeight="9" refX="9" refY="4.5" orient="auto">
+      <polygon points="0 0, 11 4.5, 0 9" fill="#475569"/>
+    </marker>
+  </defs>
+
+  <rect width="1200" height="980" class="bg"/>
+  <text x="600" y="48" text-anchor="middle" class="title">Core SED Model</text>
+  <text x="600" y="78" text-anchor="middle" class="subtitle">Main forward path used for bird-species prediction</text>
+
+  <rect x="350" y="120" width="500" height="86" class="box"/>
+  <text x="600" y="154" text-anchor="middle" class="boxtitle">1. Audio Input</text>
+  <text x="600" y="180" text-anchor="middle" class="body">20-second waveform sampled at 32 kHz</text>
+
+  <rect x="350" y="245" width="500" height="96" class="box"/>
+  <text x="600" y="279" text-anchor="middle" class="boxtitle">2. Spectrogram Front-End</text>
+  <text x="600" y="305" text-anchor="middle" class="body">Convert waveform into Mel spectrogram</text>
+  <text x="600" y="327" text-anchor="middle" class="small">224 mel bands, 4096 n_fft</text>
+
+  <rect x="350" y="380" width="500" height="96" class="box"/>
+  <text x="600" y="414" text-anchor="middle" class="boxtitle">3. Normalization</text>
+  <text x="600" y="440" text-anchor="middle" class="body">Absmax normalization on audio</text>
+  <text x="600" y="462" text-anchor="middle" class="small">then z-score + min-max on the spectrogram</text>
+
+  <rect x="350" y="515" width="500" height="86" class="box"/>
+  <text x="600" y="549" text-anchor="middle" class="boxtitle">4. 3-Channel Replication</text>
+  <text x="600" y="575" text-anchor="middle" class="body">Turn the spectrogram into an image-like tensor</text>
+
+  <rect x="350" y="640" width="500" height="106" class="box"/>
+  <text x="600" y="674" text-anchor="middle" class="boxtitle">5. CNN Backbone</text>
+  <text x="600" y="700" text-anchor="middle" class="body">Use a features_only backbone to preserve time structure</text>
+  <text x="600" y="722" text-anchor="middle" class="small">Examples: EfficientNet, NFNet, RegNet</text>
+
+  <rect x="350" y="785" width="500" height="116" class="box"/>
+  <text x="600" y="819" text-anchor="middle" class="boxtitle">6. SED Head</text>
+  <text x="600" y="845" text-anchor="middle" class="body">Apply GeMFreq across frequency, then AttHead</text>
+  <text x="600" y="867" text-anchor="middle" class="small">Dense + ReLU + Dropout + Conv1d for framewise logits</text>
+
+  <rect x="885" y="790" width="230" height="50" class="note"/>
+  <text x="1000" y="821" text-anchor="middle" class="small">Framewise output: [B, 206, T]</text>
+
+  <rect x="885" y="850" width="230" height="50" class="note"/>
+  <text x="1000" y="881" text-anchor="middle" class="small">Clip output: max over time -> [B, 206]</text>
+
+  <rect x="85" y="790" width="215" height="110" class="note"/>
+  <text x="192" y="820" text-anchor="middle" class="boxtitle">Backbone Examples</text>
+  <text x="105" y="848" class="small">• tf_efficientnet_b3 / b0</text>
+  <text x="105" y="872" class="small">• eca_nfnet_l0</text>
+  <text x="105" y="896" class="small">• regnety_016 / regnety_008</text>
+
+  <line x1="600" y1="206" x2="600" y2="245" class="arrow"/>
+  <line x1="600" y1="341" x2="600" y2="380" class="arrow"/>
+  <line x1="600" y1="476" x2="600" y2="515" class="arrow"/>
+  <line x1="600" y1="601" x2="600" y2="640" class="arrow"/>
+  <line x1="600" y1="746" x2="600" y2="785" class="arrow"/>
+</svg>

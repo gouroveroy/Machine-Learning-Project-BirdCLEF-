@@ -1,0 +1,745 @@
+\documentclass[aspectratio=169]{beamer}
+
+% ============================================
+% Theme and Colors
+% ============================================
+\usetheme{Madrid}
+\usecolortheme{seahorse}
+\definecolor{birdgreen}{RGB}{34, 139, 34}
+\definecolor{skyblue}{RGB}{70, 130, 180}
+\definecolor{darkblue}{RGB}{0, 51, 102}
+\setbeamercolor{frametitle}{bg=darkblue, fg=white}
+\setbeamercolor{title}{bg=darkblue, fg=white}
+\setbeamercolor{block title}{bg=skyblue, fg=white}
+\setbeamercolor{block body}{bg=skyblue!10, fg=black}
+\setbeamercolor{itemize item}{fg=birdgreen}
+\setbeamercolor{itemize subitem}{fg=skyblue}
+
+% ============================================
+% Packages
+% ============================================
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\graphicspath{{images/}}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, calc, decorations.pathreplacing}
+\usepackage{booktabs}
+\usepackage{colortbl}
+\usepackage{amsmath}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{multicol}
+
+% ============================================
+% Listing Style
+% ============================================
+\lstset{
+    basicstyle=\tiny\ttfamily,
+    keywordstyle=\color{blue},
+    commentstyle=\color{gray},
+    breaklines=true,
+    frame=single
+}
+
+% ============================================
+% Title Information
+% ============================================
+\title[Species Identification in Noisy Soundscapes]{\textbf{Species Identification in Noisy Soundscapes}}
+\subtitle{A Deep Learning Approach using Sound Event Detection}
+\author{CSE 329 - Machine Learning Sessional}
+\institute{BUET}
+\date{April 2026}
+
+% ============================================
+% Document Begin
+% ============================================
+\begin{document}
+
+% ------------------------------------------
+% Title Slide
+% ------------------------------------------
+\begin{frame}
+    \titlepage
+\end{frame}
+
+% ------------------------------------------
+% Outline
+% ------------------------------------------
+\begin{frame}{Outline}
+    \tableofcontents
+\end{frame}
+
+% ============================================
+\section{Introduction}
+% ============================================
+
+% ------------------------------------------
+% Problem Statement
+% ------------------------------------------
+\begin{frame}{Problem Statement}
+    \begin{columns}
+        \begin{column}{0.55\textwidth}
+            \begin{block}{Acoustic Species Identification}
+                Identify bird, insect, and amphibian species from \textbf{noisy soundscape recordings} in tropical rainforest environments.
+            \end{block}
+
+            \vspace{0.3cm}
+            \textbf{Key Challenges:}
+            \begin{itemize}
+                \item 206 different species to classify
+                \item Heavy background noise (rain, wind, other animals)
+                \item Overlapping species calls
+                \item Extreme class imbalance (some species very rare)
+                \item 60-second long soundscape recordings
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.42\textwidth}
+            \begin{tikzpicture}[scale=0.8]
+                % Soundscape representation
+                \draw[fill=skyblue!20, rounded corners] (0,0) rectangle (5,3.5);
+                \node at (2.5,3.8) {\textbf{60s Soundscape}};
+
+                % Multiple species
+                \draw[fill=birdgreen!60, rounded corners] (0.2,2.5) rectangle (2,3);
+                \node[font=\tiny] at (1.1,2.75) {Bird A};
+
+                \draw[fill=orange!60, rounded corners] (1.5,1.8) rectangle (3.5,2.3);
+                \node[font=\tiny] at (2.5,2.05) {Insect B};
+
+                \draw[fill=purple!60, rounded corners] (2.8,1) rectangle (4.8,1.5);
+                \node[font=\tiny] at (3.8,1.25) {Frog C};
+
+                % Noise overlay
+                \draw[fill=gray!30, opacity=0.5] (0,0) rectangle (5,0.7);
+                \node[font=\tiny] at (2.5,0.35) {Background Noise};
+            \end{tikzpicture}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% ------------------------------------------
+% Dataset Overview
+% ------------------------------------------
+\begin{frame}{Dataset Overview}
+    \begin{columns}
+        \begin{column}{0.48\textwidth}
+            \begin{block}{Training Data}
+                \begin{itemize}
+                    \item \textbf{Species}: 206 total
+                    \begin{itemize}
+                        \item Aves (birds): majority
+                        \item Amphibia: 6 species
+                        \item Insecta: multiple species
+                    \end{itemize}
+                    \item \textbf{Audio format}: .ogg files
+                    \item \textbf{Sample rate}: 32,000 Hz
+                    \item \textbf{Duration}: Variable (5s - 60s)
+                \end{itemize}
+            \end{block}
+
+            \begin{alertblock}{Class Imbalance Problem}
+                Some species have 1000+ samples while others have $<$ 10 samples
+            \end{alertblock}
+        \end{column}
+        \begin{column}{0.48\textwidth}
+            \begin{block}{Test Data (Soundscapes)}
+                \begin{itemize}
+                    \item 60-second continuous recordings
+                    \item Multiple species per recording
+                    \item Real-world noise conditions
+                    \item Predictions required per 5-second segment
+                \end{itemize}
+            \end{block}
+
+            \vspace{0.3cm}
+            \textbf{Evaluation Metric:}
+            \begin{itemize}
+                \item Row-wise micro-averaged F1 score
+                \item Top-1 and Top-5 accuracy
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% ============================================
+\section{Audio Processing Pipeline}
+% ============================================
+
+% ------------------------------------------
+% Audio to Spectrogram
+% ------------------------------------------
+\begin{frame}{Audio Processing Pipeline}
+    \begin{center}
+        \begin{tikzpicture}[
+            node distance=1.2cm,
+            box/.style={rectangle, draw, rounded corners, fill=skyblue!30, minimum width=2.5cm, minimum height=0.8cm, font=\small},
+            arrow/.style={->, thick, >=stealth}
+        ]
+            % Nodes
+            \node[box] (audio) {Raw Audio\\(20s, 32kHz)};
+            \node[box, right=of audio] (mel) {Mel Spectrogram\\(224 $\times$ 512)};
+            \node[box, right=of mel] (norm) {Normalization\\(Z-score + MinMax)};
+            \node[box, right=of norm] (chan) {3-Channel\\Replication};
+            \node[box, right=of chan] (cnn) {CNN Input\\(3 $\times$ 224 $\times$ 512)};
+
+            % Arrows
+            \draw[arrow] (audio) -- (mel);
+            \draw[arrow] (mel) -- (norm);
+            \draw[arrow] (norm) -- (chan);
+            \draw[arrow] (chan) -- (cnn);
+        \end{tikzpicture}
+    \end{center}
+
+    \vspace{0.5cm}
+    \begin{columns}
+        \begin{column}{0.48\textwidth}
+            \begin{block}{Mel Spectrogram Parameters}
+                \begin{itemize}
+                    \item \textbf{Sample Rate}: 32,000 Hz
+                    \item \textbf{Mel Bands}: 224 (high resolution)
+                    \item \textbf{n\_fft}: 4,096 (frequency detail)
+                    \item \textbf{Hop Length}: 1,252
+                    \item \textbf{Frequency Range}: 0 - 16,000 Hz
+                \end{itemize}
+            \end{block}
+        \end{column}
+        \begin{column}{0.48\textwidth}
+            \begin{block}{Why 20-Second Chunks?}
+                \begin{itemize}
+                    \item Captures full calls of Amphibia/Insecta
+                    \item Provides temporal context
+                    \item Optimal balance: accuracy vs. inference time
+                    \item 20s $\rightarrow$ 87.2\% vs 5s $\rightarrow$ 84.2\% accuracy
+                \end{itemize}
+            \end{block}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% ============================================
+\section{Model Architecture}
+% ============================================
+
+% ------------------------------------------
+% SED Architecture
+% ------------------------------------------
+\begin{frame}{Sound Event Detection (SED) Architecture}
+    \begin{center}
+        \includegraphics[width=1.5\textwidth,height=0.85\textheight,keepaspectratio]{architecture_core_model.pdf}
+    \end{center}
+\end{frame}
+
+% ------------------------------------------
+% GeMFreq and AttHead Details
+% ------------------------------------------
+\begin{frame}[t]{Key Architecture Components}
+    \begin{columns}[T]
+        \begin{column}{0.48\textwidth}
+            \begin{block}{GeMFreq Pooling}
+                \textbf{Generalized Mean Frequency Pooling}
+                \begin{itemize}
+                    \item Learnable pooling parameter $p$
+                    \item Formula: $\left(\frac{1}{|F|}\sum_{f} x_f^p\right)^{1/p}$
+                    \item Adapts between max and average pooling
+                    \item Better captures frequency patterns
+                \end{itemize}
+            \end{block}
+
+            \begin{exampleblock}{Why Features Only?}
+                Extract spatial features without classification head $\rightarrow$ preserves temporal dimension for SED
+            \end{exampleblock}
+        \end{column}
+        \begin{column}{0.48\textwidth}
+            \begin{block}{AttHead (Attention Head)}
+                \begin{enumerate}
+                    \item Dense layer: backbone\_dim $\rightarrow$ 512
+                    \item Parallel branches:
+                    \begin{itemize}
+                        \item \textbf{Attention}: 1$\times$1 Conv $\rightarrow$ Softmax
+                        \item \textbf{Logits}: 1$\times$1 Conv $\rightarrow$ 206 classes
+                    \end{itemize}
+                    \item Weighted aggregation:
+                    $$\text{clip\_logits} = \sum_t \text{att}_t \cdot \text{logits}_t$$
+                \end{enumerate}
+            \end{block}
+
+            \textbf{Advantage}: Learns which time frames contain species calls!
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% ============================================
+\section{Training Techniques}
+% ============================================
+
+% ------------------------------------------
+% Data Augmentation
+% ------------------------------------------
+\begin{frame}[t]{Data Augmentation Techniques}
+    \begin{columns}[T]
+        \begin{column}{0.32\textwidth}
+            \begin{block}{Mixup ($\alpha = 0.5$)}
+                \begin{center}
+                    \begin{tikzpicture}[scale=0.55]
+                        \draw[fill=blue!30] (0,0) rectangle (2,1.5);
+                        \node at (1,0.75) {\tiny Audio A};
+                        \draw[fill=red!30] (0,1.8) rectangle (2,3.3);
+                        \node at (1,2.55) {\tiny Audio B};
+                        \draw[->, thick] (2.2,1.65) -- (3,1.65);
+                        \draw[fill=purple!30] (3.2,0.8) rectangle (5.2,2.5);
+                        \node at (4.2,1.65) {\tiny Mixed};
+                    \end{tikzpicture}
+                \end{center}
+                $\tilde{x} = \lambda x_a + (1-\lambda) x_b$
+
+                \textcolor{birdgreen}{\textbf{+2-3\% accuracy}}
+            \end{block}
+        \end{column}
+        \begin{column}{0.32\textwidth}
+            \begin{block}{SpecAugment}
+                \begin{center}
+                    \begin{tikzpicture}[scale=0.55]
+                        \draw[fill=skyblue!30] (0,0) rectangle (3,2);
+                        \draw[fill=black] (1,0) rectangle (1.3,2);
+                        \draw[fill=black] (0,0.8) rectangle (3,1.1);
+                        \node at (1.5,-0.3) {\tiny Masked};
+                    \end{tikzpicture}
+                \end{center}
+                \begin{itemize}
+                    \item Time masking: 20\%
+                    \item Freq masking: 10\%
+                \end{itemize}
+                \textcolor{birdgreen}{\textbf{+1-2\% accuracy}}
+            \end{block}
+        \end{column}
+        \begin{column}{0.32\textwidth}
+            \begin{block}{Weighted Sampling}
+                Address class imbalance:
+                $$w_c = \frac{1}{\sqrt{n_c}}$$
+                \begin{itemize}
+                    \item Rare species $\uparrow$
+                    \item Common species $\downarrow$
+                \end{itemize}
+                \textcolor{birdgreen}{\textbf{Critical for rare species}}
+            \end{block}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% ------------------------------------------
+% Training Configuration
+% ------------------------------------------
+\begin{frame}[t]{Training Configuration}
+    \begin{columns}[T]
+        \begin{column}{0.48\textwidth}
+            \begin{block}{Optimizer \& Scheduler}
+                \begin{itemize}
+                    \item \textbf{Optimizer}: AdamW
+                    \begin{itemize}
+                        \item Learning rate: $5 \times 10^{-4}$
+                        \item Weight decay: $10^{-4}$
+                    \end{itemize}
+                    \item \textbf{Scheduler}: CosineAnnealingWarmRestarts
+                    \begin{itemize}
+                        \item $T_0 = 5$ epochs
+                        \item $\eta_{min} = 10^{-6}$
+                    \end{itemize}
+                    \item \textbf{Gradient Clipping}: max\_norm = 1.0
+                \end{itemize}
+            \end{block}
+        \end{column}
+        \begin{column}{0.48\textwidth}
+            \begin{block}{Loss Function}
+                \textbf{CrossEntropy with Label Smoothing}
+                $$\mathcal{L} = -\sum_c y_c' \log(p_c)$$
+                where $y_c' = (1-\epsilon)y_c + \frac{\epsilon}{C}$
+
+                \begin{itemize}
+                    \item Label smoothing: $\epsilon = 0.1$
+                    \item Prevents overconfident predictions
+                    \item Better calibration
+                \end{itemize}
+            \end{block}
+
+            \begin{exampleblock}{Training Details}
+                \begin{itemize}
+                    \item Epochs: 15-35
+                    \item Batch size: 64
+                    \item 5-fold cross-validation
+                \end{itemize}
+            \end{exampleblock}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% ------------------------------------------
+% Training Pipeline Diagram
+% ------------------------------------------
+\begin{frame}{Supervised Training Pipeline}
+    \begin{center}
+        \includegraphics[width=1.5\textwidth,height=0.85\textheight,keepaspectratio]{architecture_supervised_training.pdf}
+    \end{center}
+\end{frame}
+
+% ============================================
+\section{Inference Pipeline}
+% ============================================
+
+% ------------------------------------------
+% Overlap-Average Inference
+% ------------------------------------------
+\begin{frame}{Overlap-Average Inference}
+    \begin{center}
+        \begin{tikzpicture}[scale=0.85]
+            % 60s soundscape
+            \draw[fill=skyblue!20, rounded corners] (0,3) rectangle (12,3.8);
+            \node at (6,3.4) {60-second Soundscape};
+
+            % Segments
+            \foreach \i in {0,1,2,3} {
+                \pgfmathsetmacro{\start}{\i*2}
+                \pgfmathsetmacro{\midy}{2 - \i*0.5}
+                \draw[fill=green!\i 0!blue, opacity=0.5, rounded corners]
+                    (\start,\midy) rectangle (\start+4,\midy+0.4);
+                \node[font=\tiny] at (\start+2,\midy+0.2) {Chunk \pgfmathparse{int(\i+1)}\pgfmathresult};
+            }
+
+            % Overlap indication
+            \draw[<->, thick, red] (2,1.2) -- (4,1.2);
+            \node[font=\tiny, red] at (3,0.9) {Overlap};
+
+            % Arrow to averaging
+            \draw[->, thick] (6,0.5) -- (6,-0.2);
+
+            % Averaged predictions
+            \draw[fill=purple!30, rounded corners] (2,-0.5) rectangle (10,-1.1);
+            \node[font=\small] at (6,-0.8) {Overlap-Averaged Framewise Predictions};
+
+            % Final output
+            \draw[->, thick] (6,-1.4) -- (6,-1.8);
+            \draw[fill=orange!30, rounded corners] (3,-2) rectangle (9,-2.6);
+            \node[font=\small] at (6,-2.3) {12 $\times$ 206 Prediction Matrix};
+        \end{tikzpicture}
+    \end{center}
+
+    \vspace{0.2cm}
+    \begin{columns}[T]
+        \begin{column}{0.48\textwidth}
+            \textbf{Process:}
+            \begin{enumerate}
+                \item Split into 12 overlapping 20s chunks (5s step)
+                \item Each chunk $\rightarrow$ framewise predictions
+                \item Average overlapping frame predictions
+            \end{enumerate}
+        \end{column}
+        \begin{column}{0.48\textwidth}
+            \textbf{Benefits:}
+            \begin{itemize}
+                \item More robust predictions
+                \item Implicit TTA effect
+                \item +0.2-0.3\% accuracy boost
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% ------------------------------------------
+% Delta-Shift TTA and Smoothing
+% ------------------------------------------
+\begin{frame}[t]{Delta-Shift TTA \& Gaussian Smoothing}
+    \begin{columns}[T]
+        \begin{column}{0.48\textwidth}
+            \begin{block}{Delta-Shift TTA}
+                Temporal shift augmentation at inference:
+                \begin{center}
+                    \begin{tikzpicture}[scale=0.7]
+                        \draw[fill=blue!20] (0,2) rectangle (4,2.5);
+                        \node at (2,2.25) {\tiny Original};
+
+                        \draw[fill=blue!30] (-0.3,1) rectangle (3.7,1.5);
+                        \node at (1.7,1.25) {\tiny Shift -2};
+
+                        \draw[fill=blue!30] (0.3,0) rectangle (4.3,0.5);
+                        \node at (2.3,0.25) {\tiny Shift +2};
+
+                        \draw[->, thick] (4.5,1.25) -- (5.5,1.25);
+
+                        \draw[fill=green!30] (5.7,0.8) rectangle (7.7,1.7);
+                        \node at (6.7,1.25) {\tiny Blend};
+                    \end{tikzpicture}
+                \end{center}
+
+                \textbf{Blending weights:}
+                $$\text{pred} = 0.50 \cdot p_0 + 0.25 \cdot p_{-2} + 0.25 \cdot p_{+2}$$
+            \end{block}
+        \end{column}
+        \begin{column}{0.48\textwidth}
+            \begin{block}{Gaussian Smoothing}
+                1D convolution to reduce prediction jitter:
+
+                \textbf{Kernel:} $[0.1, 0.2, 0.4, 0.2, 0.1]$
+
+                \begin{center}
+                    \begin{tikzpicture}[scale=0.6]
+                        % Before
+                        \draw[thick, blue] plot[smooth] coordinates {
+                            (0,1) (0.5,2) (1,1.2) (1.5,2.5) (2,1.8) (2.5,2.2) (3,1.5)
+                        };
+                        \node at (1.5,-0.3) {\tiny Before};
+
+                        % Arrow
+                        \draw[->, thick] (3.5,1.5) -- (4.5,1.5);
+
+                        % After
+                        \draw[thick, green!60!black] plot[smooth] coordinates {
+                            (5,1.3) (5.5,1.7) (6,1.8) (6.5,2) (7,1.9) (7.5,1.8) (8,1.6)
+                        };
+                        \node at (6.5,-0.3) {\tiny After};
+                    \end{tikzpicture}
+                \end{center}
+
+                Reduces temporal noise while preserving patterns.
+            \end{block}
+        \end{column}
+    \end{columns}
+
+    \vspace{0.2cm}
+    \begin{exampleblock}{Combined Effect}
+        Delta-Shift TTA + Gaussian Smoothing = \textbf{Free accuracy boost at inference time!}
+    \end{exampleblock}
+\end{frame}
+
+% ------------------------------------------
+% Inference Pipeline Diagram
+% ------------------------------------------
+\begin{frame}{Inference \& Ensemble Pipeline}
+    \begin{center}
+        \includegraphics[width=1.5\textwidth,height=0.9\textheight,keepaspectratio]{architecture_inference_ensemble.pdf}
+    \end{center}
+\end{frame}
+
+% ============================================
+\section{Multi-Model Ensemble}
+% ============================================
+
+% ------------------------------------------
+% Ensemble Architecture
+% ------------------------------------------
+\begin{frame}{6-Model Ensemble Architecture}
+    \begin{center}
+        \begin{tabular}{llcc}
+            \toprule
+            \textbf{Model} & \textbf{Backbone} & \textbf{Feature Dim} & \textbf{Training Stage} \\
+            \midrule
+            1 & tf\_efficientnet\_b3 & 384 & Trained (ours) \\
+            2 & tf\_efficientnet\_b0 & 320 & Trained (ours) \\
+            3 & eca\_nfnet\_l0 & 2304 & Trained (ours) \\
+            4 & tf\_efficientnet\_b4 & 448 & External pretrained \\
+            5 & regnety\_016 & 888 & External pretrained \\
+            6 & regnety\_008 & 768 & External pretrained \\
+            \bottomrule
+        \end{tabular}
+    \end{center}
+
+    \vspace{0.5cm}
+    \begin{columns}
+        \begin{column}{0.48\textwidth}
+            \begin{block}{Ensemble Strategy}
+                \textbf{Arithmetic Mean} of softmax predictions:
+                $$\hat{p} = \frac{1}{6}\sum_{m=1}^{6} p^{(m)}$$
+            \end{block}
+        \end{column}
+        \begin{column}{0.48\textwidth}
+            \begin{alertblock}{Why Diverse Architectures?}
+                \begin{itemize}
+                    \item Different inductive biases
+                    \item Error decorrelation
+                    \item Robust to distribution shift
+                \end{itemize}
+            \end{alertblock}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% ============================================
+\section{Results}
+% ============================================
+
+% ------------------------------------------
+% Performance Results
+% ------------------------------------------
+\begin{frame}{Performance Results}
+    \begin{center}
+        \begin{tabular}{lccc}
+            \toprule
+            \textbf{Model} & \textbf{Top-1 Acc} & \textbf{Top-5 Acc} & \textbf{vs Random} \\
+            \midrule
+            Random Baseline & 0.49\% & 2.43\% & 1$\times$ \\
+            \midrule
+            Base Model (EfficientNet-B3 SED) & 60.07\% & 80.34\% & 123.8$\times$ \\
+            \rowcolor{green!20}
+            \textbf{6-Model Ensemble} & \textbf{87.99\%} & \textbf{95.99\%} & \textbf{181.3$\times$} \\
+            \bottomrule
+        \end{tabular}
+    \end{center}
+
+    \vspace{0.5cm}
+    \begin{columns}
+        \begin{column}{0.48\textwidth}
+            \begin{block}{Key Achievements}
+                \begin{itemize}
+                    \item \textbf{+28\%} absolute improvement from ensemble
+                    \item \textbf{181$\times$} better than random
+                    \item 206 species classified successfully
+                    \item Real-time inference capability
+                \end{itemize}
+            \end{block}
+        \end{column}
+        \begin{column}{0.48\textwidth}
+            \begin{exampleblock}{Technique Contributions}
+                \begin{itemize}
+                    \item SED Architecture: Foundation
+                    \item Data Augmentation: +5\% accuracy
+                    \item Ensemble: +3\% accuracy
+                    \item TTA + Smoothing: +0.5\% accuracy
+                \end{itemize}
+            \end{exampleblock}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% ------------------------------------------
+% Sample Predictions
+% ------------------------------------------
+\begin{frame}{Sample Audio Predictions}
+    \begin{center}
+        \begin{tabular}{lllr}
+            \toprule
+            \textbf{Audio File} & \textbf{True Species} & \textbf{Top Prediction} & \textbf{Confidence} \\
+            \midrule
+            XC254589.ogg & amekes & amekes & \textcolor{green!60!black}{\textbf{84.3\%}} \\
+            XC493187.ogg & ywcpar & ywcpar & \textcolor{green!60!black}{\textbf{53.0\%}} \\
+            XC449442.ogg & savhaw1 & savhaw1 & 22.8\% \\
+            XC171396.ogg & smbani & strher & \textcolor{red}{11.7\%} \\
+            XC82494.ogg & bobfly1 & crbtan1 & \textcolor{red}{61.6\%} \\
+            \bottomrule
+        \end{tabular}
+    \end{center}
+
+    \vspace{0.5cm}
+    \begin{alertblock}{Observations}
+        \begin{itemize}
+            \item High confidence for clear recordings (84.3\% for amekes)
+            \item Confusions occur for acoustically similar species
+            \item Some rare species remain challenging (class imbalance effect)
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+% ============================================
+\section{Summary}
+% ============================================
+
+% ------------------------------------------
+% Techniques Summary
+% ------------------------------------------
+\begin{frame}[t]{All Techniques Implemented}
+    \begin{multicols}{2}
+        \textbf{Architecture:}
+        \begin{enumerate}
+            \item SED (GeMFreq + AttHead)
+            \item 20s chunks, 224 mel bands
+            \item Z-score + min-max normalization
+            \item Absmax audio normalization
+        \end{enumerate}
+
+        \textbf{Training:}
+        \begin{enumerate}
+            \setcounter{enumi}{4}
+            \item Mixup augmentation
+            \item SpecAugment
+            \item Weighted Random Sampling
+            \item CrossEntropy + label smoothing
+            \item AdamW + CosineAnnealing
+        \end{enumerate}
+
+        \columnbreak
+
+        \textbf{Inference:}
+        \begin{enumerate}
+            \setcounter{enumi}{9}
+            \item Overlap-Average Inference
+            \item Delta-Shift TTA
+            \item Gaussian Smoothing
+            \item Multi-Model Ensemble
+        \end{enumerate}
+
+        \vspace{0.5cm}
+        \begin{center}
+            \textcolor{birdgreen}{\Large \textbf{13 Techniques}}
+        \end{center}
+    \end{multicols}
+\end{frame}
+
+% ------------------------------------------
+% Conclusion
+% ------------------------------------------
+\begin{frame}[t]{Conclusion \& Future Work}
+    \begin{columns}[T]
+        \begin{column}{0.48\textwidth}
+            \begin{block}{Achievements}
+                \begin{itemize}
+                    \item Complete SED pipeline implementation
+                    \item State-of-the-art accuracy: \textbf{87.99\%}
+                    \item 6-model diverse ensemble
+                    \item All advanced techniques implemented
+                    \item Modular, extensible codebase
+                \end{itemize}
+            \end{block}
+        \end{column}
+        \begin{column}{0.48\textwidth}
+            \begin{alertblock}{Future Improvements}
+                \begin{itemize}
+                    \item Dedicated Insecta/Amphibia model
+                    \item Additional Xeno-Canto data
+                    \item Transformer-based architectures
+                    \item OpenVINO deployment optimization
+                    \item Real-time mobile inference
+                \end{itemize}
+            \end{alertblock}
+        \end{column}
+    \end{columns}
+
+    \vspace{0.3cm}
+    \begin{exampleblock}{Real-World Applications}
+        Biodiversity monitoring $\cdot$ Automated wildlife surveys $\cdot$ Climate change assessment
+    \end{exampleblock}
+\end{frame}
+
+% ------------------------------------------
+% Thank You
+% ------------------------------------------
+\begin{frame}
+    \begin{center}
+        \Huge \textcolor{darkblue}{\textbf{Thank You!}}
+
+        \vspace{1cm}
+        \Large Questions?
+
+        \vspace{1cm}
+        \normalsize
+        \begin{tikzpicture}
+            \draw[fill=birdgreen!30, rounded corners] (0,0) rectangle (6,1.5);
+            \node at (3,0.75) {
+                \begin{tabular}{c}
+                    CSE 329 - Machine Learning Sessional \\
+                    BUET $\cdot$ April 2026
+                \end{tabular}
+            };
+        \end{tikzpicture}
+    \end{center}
+\end{frame}
+
+\end{document}

@@ -1,4 +1,4 @@
-# Species Identification in Noisy Soundscapes - BirdCLEF 2025
+# Species Identification in Noisy Soundscapes
 
 ## Project Overview
 
@@ -30,9 +30,9 @@ This notebook implements a **complete deep learning solution** for identifying b
 - `tf_efficientnet_b3.ns_jft_in1k` — Our trained base SED model
 - `tf_efficientnet_b0.ns_jft_in1k` — Our trained lightweight ensemble member
 - `eca_nfnet_l0.ra2_in1k` — Our trained NFNet ensemble member
-- `tf_efficientnet_b4.ns_jft_in1k` — 1st-place BirdCLEF 2025 pretrained
-- `regnety_016.tv2_in1k` — 1st-place BirdCLEF 2025 pretrained
-- `regnety_008.pycls_in1k` — 1st-place BirdCLEF 2025 pretrained
+- `tf_efficientnet_b4.ns_jft_in1k` — External pretrained
+- `regnety_016.tv2_in1k` — External pretrained
+- `regnety_008.pycls_in1k` — External pretrained
 
 ---
 
@@ -460,7 +460,7 @@ After running all cells successfully:
 - Enhanced `BirdClassifierSED_V2` with `drop_path_rate` support
 - Randomly drops entire residual blocks during training for stronger regularization
 - Used during self-training only (`drop_path_rate=0.15`)
-- Robust weight loader handles both standard and 1st-place pretrained model formats
+- Robust weight loader handles both standard and external pretrained model formats
 
 **Cell 12: Delta-Shift TTA** (`cell_12_delta_shift_tta.py`)
 
@@ -473,11 +473,11 @@ After running all cells successfully:
 - Teacher model generates pseudo-labels on unlabeled soundscape audio
 - Power transform reduces label noise (power: 1.0 → 1.54 → 1.82)
 - Student trains on MixUp(labeled, pseudo-labeled) with Stochastic Depth
-- Biggest single improvement technique in competition solutions
+- Biggest single improvement technique for audio classification
 
 **Cell 14: Multi-Model Ensemble** (`cell_14_multi_model_ensemble.py`)
 
-- **6-model ensemble** combining 3 self-trained + 3 competition 1st-place pretrained models
+- **6-model ensemble** combining 3 self-trained + 3 external pretrained models
 - Architectures: EfficientNet-B0/B3/B4, RegNetY-008/016, ECA-NFNet-L0
 - Arithmetic mean ensemble of softmax predictions
 - Automatic label permutation mapping for cross-team model compatibility
@@ -497,7 +497,7 @@ After running all cells successfully:
 
 ## Context
 
-In this project we identify bird species from audio recordings in noisy, real-world environments using the BirdCLEF 2025 dataset:
+In this project we identify bird species from audio recordings in noisy, real-world environments:
 - 206 different bird species
 - Thousands of audio recordings from various locations
 - Background noise from rain, wind, insects, and other birds
