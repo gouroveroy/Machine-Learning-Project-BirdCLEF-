@@ -1,0 +1,14 @@
+/.github/
+*.toc
+*.aux
+*.log
+*.out
+*.gz
+*.lof
+*.lot
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.nav
+*.snm
+*.vrb
