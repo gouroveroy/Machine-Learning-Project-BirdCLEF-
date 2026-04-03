@@ -1,46 +1,31 @@
-\documentclass[aspectratio=169]{beamer}
+\documentclass[aspectratio=169, 11pt]{beamer}
 
 % ============================================
 % Theme and Colors
 % ============================================
 \usetheme{moloch}
 \molochset{
-    block=fill,
+    block=transparent,
     background=dark,
     sectionpage=none
 }
 \usecolortheme{dracula}
 
 % ============================================
-% Color Mapping & Dracula Overrides
+% Fonts & Typography
 % ============================================
-\definecolor{birdgreen}{RGB}{80, 250, 123}  % draculagreen
-\definecolor{skyblue}{RGB}{139, 233, 253}    % draculacyan
-\definecolor{darkblue}{RGB}{40, 42, 54}      % draculabg
-
-\setbeamercolor{title separator}{fg=draculapink}
-\setbeamercolor{progress bar}{fg=draculagreen, bg=draculacurrent}
-
-% ============================================
-% TikZ Styles (Updated for Dracula Dark Mode)
-% ============================================
-\tikzset{
-    sedbox/.style={rectangle, draw=draculapurple, fill=draculacurrent, rounded corners=5pt, line width=1.2pt, minimum width=6.5cm, minimum height=1cm, align=center, font=\small, text=draculafg},
-    greenbox/.style={rectangle, draw=draculagreen, fill=draculacurrent, rounded corners=5pt, line width=1.2pt, minimum width=6.5cm, minimum height=1cm, align=center, font=\small, text=draculafg},
-    orangebox/.style={rectangle, draw=draculaorange, fill=draculacurrent, rounded corners=5pt, line width=1.2pt, minimum width=6.5cm, minimum height=1cm, align=center, font=\small, text=draculafg},
-    sednote/.style={rectangle, draw=draculacomment, fill=draculabg, rounded corners=5pt, line width=0.8pt, minimum width=3cm, align=left, font=\tiny, text=draculafg},
-    sedarrow/.style={-Stealth, thick, color=draculacyan, line width=1.2pt}
-}
+\usepackage[sfdefault, medium]{inter}
+\usepackage[T1]{fontenc}
+\usepackage{microtype}
 
 % ============================================
 % Packages
 % ============================================
 \usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
 \usepackage{graphicx}
 \graphicspath{{images/}}
 \usepackage{tikz}
-\usetikzlibrary{shapes.geometric, arrows.meta, positioning, calc, decorations.pathreplacing}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, calc, decorations.pathreplacing, shadows, fadings}
 \usepackage{booktabs}
 \usepackage{colortbl}
 \usepackage{amsmath}
@@ -48,26 +33,105 @@
 \usepackage{hyperref}
 \usepackage{listings}
 \usepackage{multicol}
+\usepackage[most]{tcolorbox}
 
+% ============================================
+% Custom Dracula Colors & Aesthetics
+% ============================================
+\definecolor{birdgreen}{RGB}{80, 250, 123}
+\definecolor{skyblue}{RGB}{139, 233, 253}
+\definecolor{darkblue}{RGB}{40, 42, 54}
+
+% tcolorbox styles for beautiful blocks
+\tcbset{
+    draculabox/.style={
+        enhanced,
+        colback=draculacurrent,
+        colframe=draculapurple,
+        coltitle=draculapurple!20!white,
+        colupper=draculafg, % Explicitly light text
+        fonttitle=\bfseries\large,
+        sharp corners=southwest,
+        boxrule=1.5pt,
+        drop fuzzy shadow,
+        top=4pt, bottom=4pt, left=6pt, right=6pt,
+        title=#1
+    },
+    greenbox_tcb/.style={
+        enhanced,
+        colback=draculacurrent,
+        colframe=draculagreen,
+        coltitle=draculagreen!20!white,
+        colupper=draculafg, % Explicitly light text
+        fonttitle=\bfseries\large,
+        sharp corners=southwest,
+        boxrule=1.5pt,
+        drop fuzzy shadow,
+        top=4pt, bottom=4pt, left=6pt, right=6pt,
+        title=#1
+    },
+    orangebox_tcb/.style={
+        enhanced,
+        colback=draculacurrent,
+        colframe=draculaorange,
+        coltitle=draculaorange!20!white,
+        colupper=draculafg, % Explicitly light text
+        fonttitle=\bfseries\large,
+        sharp corners=southwest,
+        boxrule=1.5pt,
+        drop fuzzy shadow,
+        top=4pt, bottom=4pt, left=6pt, right=6pt,
+        title=#1
+    }
+}
+
+% ============================================
+% TikZ Styles (Modernized)
+% ============================================
+\tikzset{
+    sedbox/.style={rectangle, draw=draculapurple, fill=draculacurrent, rounded corners=3pt, line width=1pt, minimum width=2.5cm, minimum height=0.8cm, align=center, font=\footnotesize, text=draculafg, drop shadow={shadow xshift=1pt, shadow yshift=-1pt, opacity=0.3}},
+    greenbox/.style={rectangle, draw=draculagreen, fill=draculacurrent, rounded corners=3pt, line width=1pt, minimum width=2.5cm, minimum height=0.8cm, align=center, font=\footnotesize, text=draculafg, drop shadow={shadow xshift=1pt, shadow yshift=-1pt, opacity=0.3}},
+    orangebox/.style={rectangle, draw=draculaorange, fill=draculacurrent, rounded corners=3pt, line width=1pt, minimum width=2.5cm, minimum height=0.8cm, align=center, font=\footnotesize, text=draculafg, drop shadow={shadow xshift=1pt, shadow yshift=-1pt, opacity=0.3}},
+    sednote/.style={rectangle, draw=draculacomment, fill=draculabg, rounded corners=2pt, line width=0.5pt, minimum width=2cm, align=left, font=\scriptsize, text=draculacyan, opacity=0.95},
+    sedarrow/.style={-Stealth, thick, color=draculacyan, line width=1.2pt}
+}
+
+% ============================================
+% Background Pattern (Soundwave Motif)
+% ============================================
+\setbeamertemplate{background}{
+    \begin{tikzpicture}[remember picture, overlay]
+        \begin{scope}[opacity=0.05] % Slightly increased opacity
+            \foreach \i in {1,...,25} {
+                \pgfmathsetmacro{\h}{rnd*2.5}
+                \draw[draculacyan, line width=0.6pt] ($(current page.south west) + (\i*0.7, 0.5)$) -- ++(0, \h);
+                \draw[draculapink, line width=0.6pt] ($(current page.south east) - (\i*0.7, -0.5)$) -- ++(0, \h);
+            }
+        \end{scope}
+    \end{tikzpicture}
+}
 
 % ============================================
 % Listing Style
 % ============================================
 \lstset{
-    basicstyle=\tiny\ttfamily,
-    keywordstyle=\color{blue},
-    commentstyle=\color{gray},
+    basicstyle=\tiny\ttfamily\color{draculafg},
+    keywordstyle=\color{draculacyan},
+    commentstyle=\color{draculacomment},
+    stringstyle=\color{draculayellow},
     breaklines=true,
-    frame=single
+    frame=none,
+    backgroundcolor=\color{draculacurrent}
 }
+
 
 % ============================================
 % Title Information
 % ============================================
 \title[Species Identification in Noisy Soundscapes]{\textbf{Species Identification in Noisy Soundscapes}}
 \subtitle{A Deep Learning Approach using Sound Event Detection}
-\author{Gourove Roy(2105017), Niloy Das Robin(2105019),\\ Sayjad Rahman(2105021)}
-\institute{CSE 329 - Machine Learning Sessional\\BUET}
+\author{Gourove Roy (2105017) $\cdot$ Niloy Das Robin (2105019) $\cdot$ Sayjad Rahman (2105021)}
+\institute{\textcolor{draculacyan}{CSE 329 - Machine Learning Sessional $\cdot$ BUET}}
 \date{\textcolor{draculapink}{April 2026}}
 
 % ============================================
@@ -76,10 +140,39 @@
 \begin{document}
 
 % ------------------------------------------
-% Title Slide
+% Title Slide (Custom Aesthetic)
 % ------------------------------------------
-\begin{frame}
-    \titlepage
+\begin{frame}[plain]
+    \begin{tikzpicture}[remember picture, overlay]
+        % Background gradients
+        \fill[draculabg] (current page.south west) rectangle (current page.north east);
+        
+        % Soundwave abstract
+        \begin{scope}
+            \foreach \i in {1,...,40} {
+                \pgfmathsetmacro{\h}{1.5 + sin(\i*20)*1.2 + rnd*0.5}
+                \pgfmathsetmacro{\op}{0.1 + rnd*0.2}
+                \draw[draculapurple, opacity=\op, line width=2pt] ($(current page.west) + (\i*0.4 - 8, -2)$) -- ++(0, \h);
+                \draw[draculacyan, opacity=\op, line width=2pt] ($(current page.west) + (\i*0.4 - 8, -2)$) -- ++(0, -\h*0.6);
+            }
+        \end{scope}
+
+        % Title content
+        \node[anchor=center, text width=0.8\textwidth, align=center] at ($(current page.center) + (0,1.5)$) {
+            {\Huge \textbf{\textcolor{draculapurple}{Species Identification in}}}\\
+            {\Huge \textbf{\textcolor{draculapurple}{Noisy Soundscapes}}}\\
+            \vspace{0.4cm}
+            {\large \textcolor{draculacyan}{A Deep Learning Approach using Sound Event Detection}}
+        };
+        
+        \node[anchor=south, text width=0.9\textwidth, align=center] at ($(current page.south) + (0,1.5)$) {
+            {\small \textcolor{draculafg}{Gourove Roy (2105017) $\cdot$ Niloy Das Robin (2105019) $\cdot$ Sayjad Rahman (2105021)}}\\
+            \vspace{0.2cm}
+            {\footnotesize \textcolor{draculacyan}{\textbf{CSE 329 - Machine Learning Sessional $\cdot$ BUET}}}\\
+            \vspace{0.4cm}
+            {\textcolor{draculapink}{April 2026}}
+        };
+    \end{tikzpicture}
 \end{frame}
 
 % ------------------------------------------
@@ -99,38 +192,38 @@
 \begin{frame}{Problem Statement}
     \begin{columns}
         \begin{column}{0.55\textwidth}
-            \begin{block}{Acoustic Species Identification}
-                Identify bird, insect, and amphibian species from \textbf{noisy soundscape recordings} in tropical rainforest environments.
-            \end{block}
+            \begin{tcolorbox}[draculabox={Acoustic Species Identification}]
+                \small Identify bird, insect, and amphibian species from \textbf{noisy soundscape recordings} in tropical rainforest environments.
+            \end{tcolorbox}
 
-            \vspace{0.3cm}
-            \textbf{Key Challenges:}
+            \vspace{0.1cm}
+            {\small \textbf{\textcolor{draculapink}{Key Challenges:}}}
             \begin{itemize}
-                \item 206 different species to classify
-                \item Heavy background noise (rain, wind, other animals)
-                \item Overlapping species calls
-                \item Extreme class imbalance (some species very rare)
-                \item 60-second long soundscape recordings
+                \item \footnotesize 206 different species to classify
+                \item \footnotesize Heavy background noise (rain, wind)
+                \item \footnotesize Overlapping species calls
+                \item \footnotesize Extreme class imbalance
+                \item \footnotesize 60-second long soundscape recordings
             \end{itemize}
         \end{column}
         \begin{column}{0.42\textwidth}
             \begin{tikzpicture}[scale=0.8]
                 % Soundscape representation
-                \draw[draw=draculapurple, fill=draculacurrent, rounded corners, line width=1pt] (0,0) rectangle (5,3.5);
-                \node[text=draculafg] at (2.5,3.8) {\textbf{60s Soundscape}};
+                \draw[draw=draculapurple, fill=draculacurrent, rounded corners=3pt, line width=1pt, drop shadow={shadow xshift=1.5pt, shadow yshift=-1.5pt, opacity=0.3}] (0,0) rectangle (5,3.5);
+                \node[text=draculafg, font=\scriptsize] at (2.5,3.8) {\textbf{60s Soundscape}};
 
                 % Multiple species
-                \draw[draw=draculapurple, fill=draculagreen!60, rounded corners] (0.2,2.5) rectangle (2,3);
+                \draw[draw=draculapurple, fill=draculagreen!40, rounded corners=2pt, drop shadow={shadow xshift=1pt, shadow yshift=-1pt, opacity=0.2}] (0.2,2.5) rectangle (2,3);
                 \node[font=\tiny, text=draculabg] at (1.1,2.75) {Bird A};
 
-                \draw[draw=draculapurple, fill=draculaorange!60, rounded corners] (1.5,1.8) rectangle (3.5,2.3);
+                \draw[draw=draculapurple, fill=draculaorange!40, rounded corners=2pt, drop shadow={shadow xshift=1pt, shadow yshift=-1pt, opacity=0.2}] (1.5,1.8) rectangle (3.5,2.3);
                 \node[font=\tiny, text=draculabg] at (2.5,2.05) {Insect B};
 
-                \draw[draw=draculapurple, fill=draculapink!60, rounded corners] (2.8,1) rectangle (4.8,1.5);
+                \draw[draw=draculapurple, fill=draculapink!40, rounded corners=2pt, drop shadow={shadow xshift=1pt, shadow yshift=-1pt, opacity=0.2}] (2.8,1) rectangle (4.8,1.5);
                 \node[font=\tiny, text=draculabg] at (3.8,1.25) {Frog C};
 
                 % Noise overlay
-                \draw[draw=draculacomment, fill=draculacomment, opacity=0.5] (0,0) rectangle (5,0.7);
+                \draw[draw=draculacomment, fill=draculacomment, opacity=0.4] (0,0) rectangle (5,0.7);
                 \node[font=\tiny, text=draculafg] at (2.5,0.35) {Background Noise};
             \end{tikzpicture}
         \end{column}
@@ -142,44 +235,33 @@
 % ------------------------------------------
 \begin{frame}{Dataset Overview}
     \begin{columns}[T, onlytextwidth]
-        \begin{column}{0.46\textwidth}
-            \begin{block}{Training Data}
+        \begin{column}{0.48\textwidth}
+            \begin{tcolorbox}[draculabox={Training Data}]
                 \small
                 \begin{itemize}
-                    \item \textbf{Species}: 206 total
-                    \begin{itemize}
-                        \item Aves (birds): majority
-                        \item Amphibia: 6 species
-                        \item Insecta: multiple species
-                    \end{itemize}
-                    \item \textbf{Audio format}: .ogg files
-                    \item \textbf{Sample rate}: 32,000 Hz
+                    \item \textbf{Species}: 206 total (Aves, Amphibia)
+                    \item \textbf{Audio}: .ogg format (32 kHz)
                     \item \textbf{Duration}: Variable (5s - 60s)
                 \end{itemize}
-            \end{block}
+            \end{tcolorbox}
 
-            \begin{alertblock}{Class Imbalance Problem}
-                \small Some species have 1000+ samples while others have $<$ 10 samples
-            \end{alertblock}
+            \begin{tcolorbox}[orangebox_tcb={Class Imbalance}]
+                \footnotesize \textcolor{draculared}{\textbf{Problem}}: Species samples range from 1000+ to $<$ 10.
+            \end{tcolorbox}
         \end{column}
-        \begin{column}{0.46\textwidth}
-            \begin{block}{Test Data (Soundscapes)}
+        \begin{column}{0.48\textwidth}
+            \begin{tcolorbox}[draculabox={Test Data (Soundscapes)}]
                 \small
                 \begin{itemize}
                     \item 60-second continuous recordings
                     \item Multiple species per recording
-                    \item Real-world noise conditions
-                    \item Predictions required per 5-second segment
+                    \item Predictions per 5-second segment
                 \end{itemize}
-            \end{block}
+            \end{tcolorbox}
 
-            \vspace{0.1cm}
-            \textbf{Evaluation Metric:}
-            \small
-            \begin{itemize}
-                \item Row-wise micro-averaged F1
-                \item Top-1 and Top-5 accuracy
-            \end{itemize}
+            \begin{tcolorbox}[greenbox_tcb={Evaluation}]
+                \footnotesize Micro-averaged F1 Score $\cdot$ Top-1/5 Acc
+            \end{tcolorbox}
         \end{column}
     \end{columns}
 \end{frame}
@@ -190,17 +272,17 @@
 
 \begin{frame}{Audio Processing Pipeline}
     \begin{center}
-        \resizebox{\textwidth}{!}{
+        \resizebox{0.9\textwidth}{!}{
             \begin{tikzpicture}[
-                node distance=0.8cm,
+                node distance=0.6cm,
                 arrow/.style={sedarrow}
             ]
                 % Nodes
-                \node[sedbox, minimum width=2.2cm, minimum height=0.8cm] (audio) {\textbf{Raw Audio}\\(20s, 32kHz)};
-                \node[sedbox, right=of audio, minimum width=2.2cm, minimum height=0.8cm] (mel) {\textbf{Mel Spectrogram}\\(224 $\times$ 512)};
-                \node[sedbox, right=of mel, minimum width=2.2cm, minimum height=0.8cm] (norm) {\textbf{Normalization}\\(Z-score + MinMax)};
-                \node[sedbox, right=of norm, minimum width=2.2cm, minimum height=0.8cm] (chan) {\textbf{3-Channel}\\Replication};
-                \node[sedbox, right=of chan, minimum width=2.2cm, minimum height=0.8cm] (cnn) {\textbf{CNN Input}\\(3 $\times$ 224 $\times$ 512)};
+                \node[sedbox, fill=draculapurple!20, text=draculabg, minimum width=2cm] (audio) {\textbf{Raw Audio}\\(20s, 32kHz)};
+                \node[sedbox, right=of audio, fill=draculacyan!20, text=draculabg, minimum width=2cm] (mel) {\textbf{Mel Spec}\\(224 $\times$ 512)};
+                \node[sedbox, right=of mel, fill=draculagreen!20, text=draculabg, minimum width=2cm] (norm) {\textbf{Norm.}\\(Z+MinMax)};
+                \node[sedbox, right=of norm, fill=draculapink!20, text=draculabg, minimum width=2cm] (chan) {\textbf{3-Channel}\\Replication};
+                \node[sedbox, right=of chan, fill=draculaorange!20, text=draculabg, minimum width=2cm] (cnn) {\textbf{CNN Input}\\(3$\times$224$\times$512)};
 
                 % Arrows
                 \draw[arrow] (audio) -- (mel);
@@ -211,30 +293,27 @@
         }
     \end{center}
 
-    \vspace{0.2cm}
+    \vspace{0.1cm}
     \begin{columns}[T, onlytextwidth]
-        \begin{column}{0.46\textwidth}
-            \begin{block}{Mel Spectrogram Parameters}
-                \small
+        \begin{column}{0.48\textwidth}
+            \begin{tcolorbox}[draculabox={Mel Spectrogram}]
+                \scriptsize
                 \begin{itemize}
-                    \item \textbf{Sample Rate}: 32,000 Hz
-                    \item \textbf{Mel Bands}: 224
-                    \item \textbf{n\_fft}: 4,096
+                    \item \textbf{Mel Bands}: 224 $\cdot$ \textbf{n\_fft}: 4,096
                     \item \textbf{Hop Length}: 1,252
                     \item \textbf{Freq Range}: 0 - 16 kHz
                 \end{itemize}
-            \end{block}
+            \end{tcolorbox}
         \end{column}
-        \begin{column}{0.46\textwidth}
-            \begin{block}{Why 20-Second Chunks?}
-                \small
+        \begin{column}{0.48\textwidth}
+            \begin{tcolorbox}[greenbox_tcb={Why 20s Chunks?}]
+                \scriptsize
                 \begin{itemize}
-                    \item Captures full Amphibia calls
-                    \item Provides temporal context
-                    \item Optimal accuracy vs. time
-                    \item 20s (87.2\%) vs 5s (84.2\%)
+                    \item \textbf{Accuracy}: 87.2\% (vs 84.2\% @ 5s)
+                    \item Captures full temporal context
+                    \item Handles long Amphibia calls
                 \end{itemize}
-            \end{block}
+            \end{tcolorbox}
         \end{column}
     \end{columns}
 \end{frame}
@@ -246,14 +325,14 @@
 \begin{frame}{Sound Event Detection (SED) Architecture}
     \begin{center}
         \resizebox{!}{0.75\textheight}{
-            \begin{tikzpicture}[node distance=0.4cm]
+            \begin{tikzpicture}[node distance=0.3cm]
                 % Main nodes
-                \node[sedbox] (input) {\textbf{1. Audio Input}\\20-second waveform sampled at 32 kHz};
-                \node[sedbox, below=of input] (spectro) {\textbf{2. Spectrogram Front-End}\\Convert waveform into Mel spectrogram\\224 mel bands, 4096 n\_fft};
-                \node[sedbox, below=of spectro] (norm) {\textbf{3. Normalization}\\Absmax normalization on audio\\then z-score + min-max on the spectrogram};
-                \node[sedbox, below=of norm] (rep) {\textbf{4. 3-Channel Replication}\\Turn the spectrogram into an image-like tensor};
-                \node[sedbox, below=of rep] (backbone) {\textbf{5. CNN Backbone}\\Use a features\_only backbone to preserve time structure\\Examples: EfficientNet, NFNet, RegNet};
-                \node[sedbox, below=of backbone] (head) {\textbf{6. SED Head}\\Apply GeMFreq across frequency, then AttHead\\Dense + ReLU + Dropout + Conv1d for framewise logits};
+                \node[sedbox, fill=draculapurple!30, text=draculabg, minimum width=6cm] (input) {\textbf{1. Audio Input}\\20s waveform @ 32 kHz};
+                \node[sedbox, fill=draculacyan!30, text=draculabg, minimum width=6cm, below=of input] (spectro) {\textbf{2. Spectrogram Front-End}\\Mel spectrogram (224 bands)};
+                \node[sedbox, fill=draculagreen!30, text=draculabg, minimum width=6cm, below=of spectro] (norm) {\textbf{3. Normalization}\\Absmax + Z-score + Min-max};
+                \node[sedbox, fill=draculapink!30, text=draculabg, minimum width=6cm, below=of norm] (rep) {\textbf{4. 3-Channel Replication}\\Convert to image-like tensor};
+                \node[sedbox, fill=draculaorange!30, text=draculabg, minimum width=6cm, below=of rep] (backbone) {\textbf{5. CNN Backbone}\\EfficientNet, NFNet, or RegNet};
+                \node[sedbox, fill=draculapurple!60, text=draculabg, minimum width=6cm, below=of backbone] (head) {\textbf{6. SED Head}\\GeMFreq + AttHead};
 
                 % Arrows
                 \draw[sedarrow] (input) -- (spectro);
@@ -263,10 +342,10 @@
                 \draw[sedarrow] (backbone) -- (head);
 
                 % Side notes
-                \node[sednote, left=1cm of head] (backbones) {\textbf{Backbone Examples}\\\textbullet\ tf\_efficientnet\_b3 / b0\\\textbullet\ eca\_nfnet\_l0\\\textbullet\ regnety\_016 / 008};
-                \node[sednote, right=1cm of head] (outputs) {Framewise output: [B, 206, T]\\Clip output: max over time $\rightarrow$ [B, 206]};
+                \node[sednote, left=0.5cm of backbone] (backbones) {\textbf{CNN Backbones}\\\textbullet\ EfficientNet B0/B3\\\textbullet\ ECA-NFNet L0\\\textbullet\ RegNetY 016};
+                \node[sednote, right=0.5cm of head] (outputs) {\textbf{Outputs}\\\textbullet\ Framewise: [206, T]\\\textbullet\ Clip-level: [206]};
                 
-                \draw[sedarrow, dashed, thin] (backbones) -- (head);
+                \draw[sedarrow, dashed, thin] (backbones) -- (backbone);
                 \draw[sedarrow, dashed, thin] (head) -- (outputs);
             \end{tikzpicture}
         }
@@ -278,38 +357,33 @@
 % ------------------------------------------
 \begin{frame}[t]{Key Architecture Components}
     \begin{columns}[T, onlytextwidth]
-        \begin{column}{0.46\textwidth}
-            \begin{block}{GeMFreq Pooling}
-                \small
+        \begin{column}{0.48\textwidth}
+            \begin{tcolorbox}[draculabox={GeMFreq Pooling}]
+                \scriptsize
                 \textbf{Generalized Mean Freq Pooling}
                 \begin{itemize}
-                    \item Learnable pooling parameter $p$
                     \item Formula: $\left(\frac{1}{|F|}\sum_{f} x_f^p\right)^{1/p}$
-                    \item Adapts: max vs average pooling
-                    \item Captures frequency patterns
+                    \item \textbf{Learnable} parameter $p$
+                    \item Adapts: Max vs Average pooling
+                    \item Captures fine-grained freq patterns
                 \end{itemize}
-            \end{block}
+            \end{tcolorbox}
 
-            \begin{exampleblock}{Why Features Only?}
-                \small Spatial features w/o classification head $\rightarrow$ preserves temporal dimension
-            \end{exampleblock}
+            \begin{tcolorbox}[greenbox_tcb={Features Only}]
+                \scriptsize Preserves temporal dimension by removing classification head from backbone.
+            \end{tcolorbox}
         \end{column}
-        \begin{column}{0.46\textwidth}
-            \begin{block}{AttHead (Attention Head)}
-                \small
+        \begin{column}{0.48\textwidth}
+            \begin{tcolorbox}[draculabox={AttHead (Attention)}]
+                \scriptsize
                 \begin{enumerate}
-                    \item Dense: backbone\_dim $\rightarrow$ 512
-                    \item Parallel branches:
-                    \begin{itemize}
-                        \item \textbf{Attention}: 1$\times$1 Conv $\rightarrow$ Softmax
-                        \item \textbf{Logits}: 1$\times$1 Conv $\rightarrow$ 206
-                    \end{itemize}
-                    \item Weighted aggregation:
+                    \item \textbf{Attention}: 1$\times$1 Conv $\rightarrow$ Softmax
+                    \item \textbf{Logits}: 1$\times$1 Conv $\rightarrow$ 206
+                    \item \textbf{Aggregation}:
                     $$\text{clip\_logits} = \sum_t \text{att}_t \cdot \text{logits}_t$$
                 \end{enumerate}
-            \end{block}
-
-            \small \textbf{Advantage}: Learns which time frames contain species calls!
+                \textcolor{draculagreen}{\textbf{Benefit}}: Learns \textit{when} species call!
+            \end{tcolorbox}
         \end{column}
     \end{columns}
 \end{frame}
@@ -318,56 +392,64 @@
 \section{Training Techniques}
 % ============================================
 
-% ------------------------------------------
-% Data Augmentation
-% ------------------------------------------
 \begin{frame}[t]{Data Augmentation Techniques}
     \begin{columns}[T]
         \begin{column}{0.32\textwidth}
-            \begin{block}{Mixup ($\alpha = 0.5$)}
+            \begin{tcolorbox}[draculabox={Mixup}, height=5.2cm]
                 \begin{center}
-                    \begin{tikzpicture}[scale=0.55]
-                        \draw[draw=draculacyan, fill=draculacyan!60] (0,0) rectangle (2,1.5);
-                        \node[text=draculabg] at (1,0.75) {\tiny Audio A};
-                        \draw[draw=draculapink, fill=draculapink!60] (0,1.8) rectangle (2,3.3);
-                        \node[text=draculabg] at (1,2.55) {\tiny Audio B};
-                        \draw[sedarrow, color=draculafg] (2.2,1.65) -- (3,1.65);
-                        \draw[draw=draculapurple, fill=draculapurple!60] (3.2,0.8) rectangle (5.2,2.5);
-                        \node[text=draculabg] at (4.2,1.65) {\tiny Mixed};
+                    \begin{tikzpicture}[scale=0.6]
+                        % Audio A
+                        \draw[draw=draculacyan, fill=draculacyan!30, rounded corners=2pt] (0,0) rectangle (2,1.2);
+                        \node[text=draculabg, font=\bfseries\tiny] at (1,0.6) {Audio A};
+                        % Audio B
+                        \draw[draw=draculapink, fill=draculapink!30, rounded corners=2pt] (0,1.5) rectangle (2,2.7);
+                        \node[text=draculabg, font=\bfseries\tiny] at (1,2.1) {Audio B};
+                        % Arrow
+                        \draw[sedarrow] (2.2,1.35) -- (3,1.35);
+                        % Mixed
+                        \draw[draw=draculapurple, fill=draculapurple!40, rounded corners=2pt] (3.2,0.6) rectangle (5.2,2.1);
+                        \node[text=draculabg, font=\bfseries\tiny] at (4.2,1.35) {Mixed};
                     \end{tikzpicture}
                 \end{center}
-                \small $\tilde{x} = \lambda x_a + (1-\lambda) x_b$
-
-                \textcolor{draculagreen}{\textbf{+2-3\% accuracy}}
-            \end{block}
+                \small
+                $$\tilde{x} = \lambda x_a + (1-\lambda) x_b$$
+                \vspace{0.1cm}
+                \centering \textbf{\textcolor{draculagreen}{+2.5\% Acc}}
+            \end{tcolorbox}
         \end{column}
         \begin{column}{0.32\textwidth}
-            \begin{block}{SpecAugment}
+            \begin{tcolorbox}[draculabox={SpecAug}, height=5.2cm]
                 \begin{center}
-                    \begin{tikzpicture}[scale=0.55]
-                        \draw[draw=draculapurple, fill=draculapurple!40] (0,0) rectangle (3,2);
-                        \draw[fill=draculagreen] (1,0) rectangle (1.3,2);
-                        \draw[fill=draculagreen] (0,0.8) rectangle (3,1.1);
-                        \node[text=draculagreen] at (1.5,-0.3) {\tiny Masked};
+                    \begin{tikzpicture}[scale=0.6]
+                        % Spectrogram
+                        \draw[draw=draculapurple, fill=draculapurple!20, rounded corners=2pt] (0,0) rectangle (3,2.5);
+                        % Time mask
+                        \fill[draculagreen, opacity=0.7] (0.8,0) rectangle (1.2,2.5);
+                        \node[rotate=90, text=draculabg, font=\bfseries\tiny] at (1,1.25) {Time Mask};
+                        % Freq mask
+                        \fill[draculacyan, opacity=0.7] (0,1.5) rectangle (3,1.8);
+                        \node[text=draculabg, font=\bfseries\tiny] at (1.5,1.65) {Freq Mask};
                     \end{tikzpicture}
                 \end{center}
+                \footnotesize 
                 \begin{itemize}
-                    \item \small Time: 20\%
-                    \item \small Freq: 10\%
+                    \item \small Time: 20\% masked
+                    \item \small Freq: 10\% masked
                 \end{itemize}
-                \textcolor{draculagreen}{\textbf{+1-2\% accuracy}}
-            \end{block}
+                \centering \textbf{\textcolor{draculagreen}{+1.5\% Acc}}
+            \end{tcolorbox}
         \end{column}
         \begin{column}{0.32\textwidth}
-            \begin{block}{Weighted Sampling}
+            \begin{tcolorbox}[orangebox_tcb={Sampling}, height=5.2cm]
                 \small Address imbalance:
-                $$w_c = \frac{1}{\sqrt{n_c}}$$
-                \begin{itemize}
-                    \item \small Rare species $\uparrow$
-                    \item \small Common $\downarrow$
-                \end{itemize}
-                \textcolor{draculagreen}{\textbf{Critical for rare}}
-            \end{block}
+                \Large $$w_c = \frac{1}{\sqrt{n_c}}$$
+                \vspace{0.2cm}
+                \footnotesize
+                \textbullet\ Rare species $\uparrow$ oversampled\\
+                \textbullet\ Common species $\downarrow$
+                \vspace{0.4cm}
+                \centering \textbf{\textcolor{draculagreen}{Essential}}
+            \end{tcolorbox}
         \end{column}
     \end{columns}
 \end{frame}
@@ -377,14 +459,13 @@
 % ------------------------------------------
 \begin{frame}[t]{Training Configuration}
     \begin{columns}[T, onlytextwidth]
-        \begin{column}{0.46\textwidth}
-            \begin{block}{Optimizer \& Scheduler}
-                \footnotesize
+        \begin{column}{0.48\textwidth}
+            \begin{tcolorbox}[draculabox={Optimizer \& Scheduler}]
+                \scriptsize
                 \begin{itemize}
                     \item \textbf{Optimizer}: AdamW
                     \begin{itemize}
-                        \item LR: $5 \times 10^{-4}$
-                        \item WD: $10^{-4}$
+                        \item LR: $5 \times 10^{-4}$ $\cdot$ WD: $10^{-4}$
                     \end{itemize}
                     \item \textbf{Scheduler}: CosineAnnealing
                     \begin{itemize}
@@ -393,30 +474,22 @@
                     \end{itemize}
                     \item \textbf{Grad Clip}: max\_norm = 1.0
                 \end{itemize}
-            \end{block}
+            \end{tcolorbox}
         \end{column}
-        \begin{column}{0.46\textwidth}
-            \begin{block}{Loss Function}
-                \footnotesize
-                \textbf{CrossEntropy + Label Smoothing}
-                \vspace{-0.1cm}
+        \begin{column}{0.48\textwidth}
+            \begin{tcolorbox}[orangebox_tcb={Loss Function}]
+                \scriptsize
+                \textbf{CE + Label Smoothing}
                 $$\mathcal{L} = -\sum_c y_c' \log(p_c)$$
-                \vspace{-0.3cm}
                 \begin{itemize}
-                    \item Smoothing: $\epsilon = 0.1$
+                    \item \textbf{Smoothing}: $\epsilon = 0.1$
                     \item Prevents overconfidence
-                    \item Better calibration
                 \end{itemize}
-            \end{block}
+            \end{tcolorbox}
 
-            \begin{exampleblock}{Training Details}
-                \footnotesize
-                \begin{itemize}
-                    \item Epochs: 15-35
-                    \item Batch size: 64
-                    \item 5-fold cross-validation
-                \end{itemize}
-            \end{exampleblock}
+            \begin{tcolorbox}[greenbox_tcb={Setup}]
+                \scriptsize 15-35 Epochs $\cdot$ Batch 64 $\cdot$ 5-Fold CV
+            \end{tcolorbox}
         \end{column}
     \end{columns}
 \end{frame}
@@ -424,14 +497,14 @@
 \begin{frame}{Supervised Training Pipeline}
     \begin{center}
         \resizebox{!}{0.75\textheight}{
-            \begin{tikzpicture}[node distance=0.4cm]
+            \begin{tikzpicture}[node distance=0.3cm]
                 % Main nodes
-                \node[greenbox] (ds) {\textbf{1. Labeled Dataset}\\Prepare 20-second chunks with species labels};
-                \node[greenbox, below=of ds] (aug) {\textbf{2. Training Augmentation}\\Apply MixUp and SpecAugment during training only\\This improves robustness to noisy audio conditions};
-                \node[greenbox, below=of aug] (samp) {\textbf{3. Weighted Sampling}\\Oversample rare species to reduce class imbalance};
-                \node[greenbox, below=of samp] (pass) {\textbf{4. Forward Pass}\\Run the SED model and convert framewise evidence\\into clip-level logits for supervised learning};
-                \node[greenbox, below=of pass] (loss) {\textbf{5. Loss and Optimization}\\CrossEntropy with label smoothing, AdamW optimizer,\\cosine learning-rate schedule, and gradient clipping};
-                \node[greenbox, below=of loss] (best) {\textbf{6. Checkpoint Selection}\\Save the best validation model as the base checkpoint};
+                \node[greenbox, fill=draculagreen!30, text=draculabg, minimum width=6cm] (ds) {\textbf{1. Labeled Dataset}\\20s chunks with species labels};
+                \node[greenbox, fill=draculapurple!30, text=draculabg, minimum width=6cm, below=of ds] (aug) {\textbf{2. Training Augmentation}\\MixUp and SpecAugment};
+                \node[greenbox, fill=draculacyan!30, text=draculabg, minimum width=6cm, below=of aug] (samp) {\textbf{3. Weighted Sampling}\\Oversample rare species};
+                \node[greenbox, fill=draculapink!30, text=draculabg, minimum width=6cm, below=of samp] (pass) {\textbf{4. Forward Pass}\\Run SED $\rightarrow$ clip-level logits};
+                \node[greenbox, fill=draculaorange!30, text=draculabg, minimum width=6cm, below=of pass] (loss) {\textbf{5. Optimization}\\CE + AdamW + Grad Clipping};
+                \node[greenbox, fill=draculagreen!60, text=draculabg, minimum width=6cm, below=of loss] (best) {\textbf{6. Model Checkpoint}\\Save best validation base};
 
                 % Arrows
                 \draw[sedarrow] (ds) -- (aug);
@@ -439,10 +512,6 @@
                 \draw[sedarrow] (samp) -- (pass);
                 \draw[sedarrow] (pass) -- (loss);
                 \draw[sedarrow] (loss) -- (best);
-
-                % Side notes
-                \node[sednote, right=1cm of loss] (settings) {\textbf{Key Settings}\\\textbullet\ MixUp alpha = 0.5\\\textbullet\ Label smoothing = 0.1\\\textbullet\ AdamW lr = 1e-4\\\textbullet\ Weight decay = 1e-2};
-                \draw[sedarrow, dashed, thin] (loss) -- (settings);
             \end{tikzpicture}
         }
     \end{center}
@@ -457,216 +526,169 @@
     \resizebox{!}{0.5\textheight}{
         \begin{tikzpicture}[scale=0.8]
             % 60s soundscape
-            \draw[draw=draculapurple, fill=draculacurrent, rounded corners, line width=1.2pt] (0,3) rectangle (12,3.8);
-            \node[text=draculafg] at (6,3.4) {\textbf{60-second Soundscape}};
+            \draw[draw=draculapurple, fill=draculacurrent, rounded corners=3pt, line width=1pt, drop shadow] (0,3) rectangle (12,3.8);
+            \node[text=draculafg, font=\small] at (6,3.4) {\textbf{60-second Soundscape}};
 
             % Segments
             \foreach \i in {0,1,2,3} {
                 \pgfmathsetmacro{\start}{\i*2}
-                \pgfmathsetmacro{\midy}{2.2 - \i*0.5}
-                \draw[draw=draculacyan, fill=draculagreen!\i 0!draculapurple, opacity=0.5, rounded corners, line width=0.8pt]
-                    (\start,\midy) rectangle (\start+4,\midy+0.4);
-                \node[font=\tiny, text=draculafg] at (\start+2,\midy+0.2) {Chunk \pgfmathparse{int(\i+1)}\pgfmathresult};
+                \pgfmathsetmacro{\midy}{2.2 - \i*0.45}
+                \draw[draw=draculacyan, fill=draculapurple!30, opacity=0.6, rounded corners=2pt]
+                    (\start,\midy) rectangle (\start+4,\midy+0.35);
+                \node[font=\tiny, text=draculafg] at (\start+2,\midy+0.17) {Chunk \pgfmathparse{int(\i+1)}\pgfmathresult};
             }
 
             % Overlap indication
-            \draw[<->, thick, draculared] (2,1.4) -- (4,1.4);
-            \node[font=\tiny, draculared] at (3,1.1) {Overlap};
+            \draw[<->, thick, draculared] (2,1.3) -- (4,1.3);
+            \node[font=\tiny, draculared] at (3,1.0) {Overlap};
 
-            % Arrow to averaging
-            \draw[sedarrow] (6,0.5) -- (6,-0.1);
-
-            % Averaged predictions
-            \node[sedbox, fill=draculacurrent, draw=draculapink, minimum width=8cm, minimum height=0.8cm] at (6,-0.6) {\textbf{Overlap-Averaged Framewise Predictions}};
-
-            % Final output
-            \draw[sedarrow] (6,-1.1) -- (6,-1.5);
-            \node[sedbox, fill=draculacurrent, draw=draculaorange, minimum width=6cm, minimum height=0.8cm] at (6,-2.0) {\textbf{12 $\times$ 206 Prediction Matrix}};
+            \draw[sedarrow] (6,0.3) -- (6,-0.2);
+            \node[sedbox, fill=draculacurrent, draw=draculapink, minimum width=8cm] at (6,-0.6) {\scriptsize \textbf{Overlap-Averaged Framewise Predictions}};
+            \draw[sedarrow] (6,-1) -- (6,-1.4);
+            \node[sedbox, fill=draculacurrent, draw=draculaorange, minimum width=6cm] at (6,-1.8) {\scriptsize \textbf{12 $\times$ 206 Prediction Matrix}};
         \end{tikzpicture}
     }
 
     \begin{columns}[T, onlytextwidth]
-        \begin{column}{0.46\textwidth}
-            \footnotesize \textbf{Process:}
-            \begin{enumerate}
-                \item Split into 12 overlapping chunks
-                \item Chunk $\rightarrow$ framewise predictions
-                \item Average overlapping frame preds
-            \end{enumerate}
+        \begin{column}{0.48\textwidth}
+            \begin{tcolorbox}[draculabox={Process}]
+                \scriptsize 12 overlapping chunks $\rightarrow$ average overlapping frame predictions.
+            \end{tcolorbox}
         \end{column}
-        \begin{column}{0.46\textwidth}
-            \footnotesize \textbf{Benefits:}
-            \begin{itemize}
-                \item More robust predictions
-                \item Implicit TTA effect
-                \item +0.2-0.3\% accuracy boost
-            \end{itemize}
+        \begin{column}{0.48\textwidth}
+            \begin{tcolorbox}[greenbox_tcb={Benefits}]
+                \scriptsize Robustness $\cdot$ TTA effect $\cdot$ \textcolor{draculagreen}{\textbf{+0.3\% Acc}}
+            \end{tcolorbox}
         \end{column}
     \end{columns}
 \end{frame}
 
-\begin{frame}[t]{Delta-Shift TTA \& Gaussian Smoothing}
+\begin{frame}[t]{Refinement: TTA \& Smoothing}
     \begin{columns}[T, onlytextwidth]
-        \begin{column}{0.46\textwidth}
-            \begin{block}{Delta-Shift TTA}
-                \small
-                Temporal shift augmentation:
+        \begin{column}{0.48\textwidth}
+            \begin{tcolorbox}[draculabox={Delta-Shift TTA}]
+                \scriptsize Temporal shift blending:
+                $$\text{pred} = 0.50 \cdot p_0 + 0.25 \cdot p_{\pm 2}$$
                 \begin{center}
-                    \resizebox{\textwidth}{!}{
-                        \begin{tikzpicture}[node distance=0.2cm]
-                            \node[sedbox, fill=draculacurrent, draw=draculacyan, minimum width=4cm, minimum height=0.5cm] (orig) {\tiny Original};
-                            \node[sedbox, fill=draculacurrent, draw=draculacyan!70, minimum width=4cm, minimum height=0.5cm, below=of orig, xshift=-0.3cm] (s1) {\tiny Shift -2};
-                            \node[sedbox, fill=draculacurrent, draw=draculacyan!70, minimum width=4cm, minimum height=0.5cm, below=of s1, xshift=0.6cm] (s2) {\tiny Shift +2};
-
-                            \node[sedbox, fill=draculagreen!20, draw=draculagreen, right=1.2cm of s1, minimum width=1.8cm, minimum height=0.8cm] (blend) {\textbf{\textcolor{draculabg}{Blend}}};
-
-                            \draw[sedarrow] (orig.east) -- (blend.north west);
-                            \draw[sedarrow] (s1.east) -- (blend.west);
-                            \draw[sedarrow] (s2.east) -- (blend.south west);
+                    \resizebox{0.7\textwidth}{!}{
+                        \begin{tikzpicture}[node distance=0.15cm]
+                            \node[sedbox, draw=draculacyan, minimum width=3cm] (orig) {\tiny Original};
+                            \node[sedbox, draw=draculacyan!50, minimum width=3cm, below=of orig, xshift=-0.2cm] (s1) {\tiny Shift -2};
+                            \node[sedbox, draw=draculacyan!50, minimum width=3cm, below=of s1, xshift=0.4cm] (s2) {\tiny Shift +2};
+                            \node[sedbox, fill=draculagreen!20, draw=draculagreen, right=0.8cm of s1, minimum width=1.5cm] (blend) {\textbf{\textcolor{draculabg}{Blend}}};
+                            \draw[sedarrow, thin] (orig.east) -- (blend.north west);
+                            \draw[sedarrow, thin] (s1.east) -- (blend.west);
+                            \draw[sedarrow, thin] (s2.east) -- (blend.south west);
                         \end{tikzpicture}
                     }
                 \end{center}
-                \vspace{-0.2cm}
-                \textbf{Blending weights:}
-                $$\text{pred} = 0.50 \cdot p_0 + 0.25 \cdot p_{\pm 2}$$
-            \end{block}
+            \end{tcolorbox}
         \end{column}
-        \begin{column}{0.46\textwidth}
-            \begin{block}{Gaussian Smoothing}
-                \small
-                1D convolution to reduce jitter:
-                \textbf{Kernel:} $[0.1, 0.2, 0.4, 0.2, 0.1]$
+        \begin{column}{0.48\textwidth}
+            \begin{tcolorbox}[draculabox={Gaussian Smoothing}]
+                \scriptsize 1D convolution to reduce jitter.
+                \vspace{0.1cm}
                 \begin{center}
-                    \begin{tikzpicture}[scale=0.5]
-                        % Before
-                        \draw[thick, draculacyan] plot[smooth] coordinates {
-                            (0,1) (0.5,2) (1,1.2) (1.5,2.5) (2,1.8) (2.5,2.2) (3,1.5)
-                        };
-                        \node[text=draculafg] at (1.5,-0.3) {\tiny Before};
-                        % Arrow
+                    \begin{tikzpicture}[scale=0.4]
+                        \draw[thick, draculacyan] plot[smooth] coordinates {(0,1) (0.5,2) (1,1.2) (1.5,2.5) (2,1.8) (2.5,2.2) (3,1.5)};
                         \draw[sedarrow] (3.5,1.5) -- (4.5,1.5);
-                        % After
-                        \draw[thick, draculagreen] plot[smooth] coordinates {
-                            (5,1.3) (5.5,1.7) (6,1.8) (6.5,2) (7,1.9) (7.5,1.8) (8,1.6)
-                        };
-                        \node[text=draculafg] at (6.5,-0.3) {\tiny After};
+                        \draw[thick, draculagreen] plot[smooth] coordinates {(5,1.3) (5.5,1.7) (6,1.8) (6.5,2) (7,1.9) (7.5,1.8) (8,1.6)};
                     \end{tikzpicture}
                 \end{center}
-                Reduces noise while preserving patterns.
-            \end{block}
+                \tiny Kernel: $[0.1, 0.2, 0.4, 0.2, 0.1]$
+            \end{tcolorbox}
+            \begin{tcolorbox}[greenbox_tcb={Outcome}]
+                \scriptsize \textcolor{draculagreen}{\textbf{Free accuracy boost}} through temporal stability.
+            \end{tcolorbox}
         \end{column}
     \end{columns}
-
-    \vspace{0.1cm}
-    \begin{exampleblock}{Combined Effect}
-        \small Delta-Shift TTA + Gaussian Smoothing = \textbf{Free accuracy boost!}
-    \end{exampleblock}
 \end{frame}
 
 \begin{frame}{Inference \& Ensemble Pipeline}
     \begin{center}
         \resizebox{!}{0.75\textheight}{
-            \begin{tikzpicture}[node distance=0.4cm]
-                % Main nodes
-                \node[orangebox] (input) {\textbf{1. Soundscape Input}\\Start from a 60-second audio recording};
-                \node[orangebox, below=of input] (win) {\textbf{2. Windowing}\\Split the recording into overlapping 20-second chunks\\using a 5-second step size};
-                \node[orangebox, below=of win] (pred) {\textbf{3. Per-Chunk SED Prediction}\\Run each chunk through the SED model to get framewise probabilities};
-                \node[orangebox, below=of pred] (refine) {\textbf{4. Temporal Refinement}\\Combine overlap-average inference, Delta-Shift TTA,\\and Gaussian smoothing for more stable predictions};
-                \node[orangebox, below=of refine] (scores) {\textbf{5. Segment-Level Scores}\\Max-pool within each 5-second segment};
+            \begin{tikzpicture}[node distance=0.3cm]
+                \node[orangebox, fill=draculaorange!30, text=draculabg, minimum width=6cm] (input) {\textbf{1. Soundscape Input}\\60s audio recording};
+                \node[orangebox, fill=draculapurple!30, text=draculabg, minimum width=6cm, below=of input] (win) {\textbf{2. Windowing}\\Overlapping 20s chunks (5s step)};
+                \node[orangebox, fill=draculacyan!30, text=draculabg, minimum width=6cm, below=of win] (pred) {\textbf{3. Per-Chunk Prediction}\\Run SED model for framewise probs};
+                \node[orangebox, fill=draculapink!30, text=draculabg, minimum width=6cm, below=of pred] (refine) {\textbf{4. Temporal Refinement}\\TTA + Smoothing + Overlap-Avg};
+                \node[orangebox, fill=draculagreen!30, text=draculabg, minimum width=6cm, below=of refine] (scores) {\textbf{5. Segment-Level Scores}\\Max-pool per 5s segment};
+                
+                \node[orangebox, right=1.2cm of scores, fill=draculacyan!60, text=draculabg, minimum width=4.5cm] (mean) {\textbf{6. Arithmetic Mean}\\Average across models};
+                \node[orangebox, below=0.6cm of mean, fill=draculapink!60, text=draculabg, minimum width=4.5cm] (out) {\textbf{7. Final Output}\\Predictions per 5s};
 
-                % Arrows
                 \draw[sedarrow] (input) -- (win);
                 \draw[sedarrow] (win) -- (pred);
                 \draw[sedarrow] (pred) -- (refine);
                 \draw[sedarrow] (refine) -- (scores);
-
-                % Side notes and ensemble
-                \node[sednote, right=1.2cm of pred] (ens) {\textbf{Ensemble Members}\\\textbullet\ tf\_efficientnet\_b3\\\textbullet\ tf\_efficientnet\_b0\\\textbullet\ eca\_nfnet\_l0\\\textbullet\ tf\_efficientnet\_b4\\\textbullet\ regnety\_016 / 008};
-                
-                \node[orangebox, right=1.2cm of scores] (mean) {\textbf{6. Arithmetic Mean}\\Average predictions across all models};
-                \node[orangebox, below=0.8cm of mean] (out) {\textbf{7. Final Output}\\Final prediction per 5-second segment};
-
-                % Connection arrows
-                \draw[sedarrow] (scores.east) -- (mean.west);
+                \draw[sedarrow] (scores) -- (mean);
                 \draw[sedarrow] (mean) -- (out);
-                \draw[sedarrow, dashed, thin] (ens) -- (mean);
             \end{tikzpicture}
         }
     \end{center}
 \end{frame}
 
 \begin{frame}{Enabling Multi-Label Classification}
-    \begin{block}{From Single-Label Training to Multi-Label Inference}
-        \footnotesize
-        Although trained on \textbf{primary labels} only, the model effectively identifies multiple concurrent species through its architectural design:
-    \end{block}
+    \begin{tcolorbox}[draculabox={From Single-Label to Multi-Label}]
+        \scriptsize Trained on primary labels, but predicts multiple concurrent species:
+    \end{tcolorbox}
 
     \begin{columns}[T, onlytextwidth]
-        \begin{column}{0.46\textwidth}
-            \begin{exampleblock}{Architectural Support}
-                \footnotesize
+        \begin{column}{0.48\textwidth}
+            \begin{tcolorbox}[greenbox_tcb={Architecture}]
+                \scriptsize
                 \begin{itemize}
-                    \item \textbf{Sigmoid Activation}: Used at inference instead of Softmax. Each class is treated as an independent binary detection task.
-                    \item \textbf{SED Localization}: The model learns features for specific species calls in time-frequency bins, allowing evidence for multiple species to exist simultaneously.
+                    \item \textbf{Sigmoid Activation}: Independent binary tasks.
+                    \item \textbf{SED Localization}: Time-frequency bin evidence.
                 \end{itemize}
-            \end{exampleblock}
+            \end{tcolorbox}
         \end{column}
-        \begin{column}{0.46\textwidth}
-            \begin{exampleblock}{Inference Logic}
-                \footnotesize
+        \begin{column}{0.48\textwidth}
+            \begin{tcolorbox}[greenbox_tcb={Inference Logic}]
+                \scriptsize
                 \begin{itemize}
-                    \item \textbf{Class Independence}: A high score for one species does not force low scores for others (unlike Softmax).
-                    \item \textbf{Thresholding}: Any species score exceeding a pre-defined threshold (e.g., 0.3) is included in the final prediction list for that 5s segment.
+                    \item \textbf{Class Independence}: No forced competition.
+                    \item \textbf{Thresholding}: Score $> 0.3 \rightarrow$ Positive.
                 \end{itemize}
-            \end{exampleblock}
+            \end{tcolorbox}
         \end{column}
     \end{columns}
     
     \vspace{0.2cm}
-    \centering \textcolor{draculapurple}{\textbf{Result: One model can detect 0, 1, or many species in a single audio chunk.}}
+    \centering \textcolor{draculapurple}{\textbf{Detects 0, 1, or many species in a single audio chunk.}}
 \end{frame}
 
 % ============================================
 \section{Multi-Model Ensemble}
 % ============================================
 
-% ------------------------------------------
-% Ensemble Architecture
-% ------------------------------------------
 \begin{frame}{6-Model Ensemble Architecture}
     \begin{center}
+        \scriptsize
         \begin{tabular}{llcc}
             \toprule
-            \textbf{Model} & \textbf{Backbone} & \textbf{Feature Dim} & \textbf{Training Stage} \\
+            \textbf{\textcolor{draculapink}{Model}} & \textbf{Backbone} & \textbf{Feat Dim} & \textbf{Stage} \\
             \midrule
-            1 & tf\_efficientnet\_b3 & 384 & Trained (ours) \\
-            2 & tf\_efficientnet\_b0 & 320 & Trained (ours) \\
-            3 & eca\_nfnet\_l0 & 2304 & Trained (ours) \\
-            4 & tf\_efficientnet\_b4 & 448 & External pretrained \\
-            5 & regnety\_016 & 888 & External pretrained \\
-            6 & regnety\_008 & 768 & External pretrained \\
+            1 & tf\_efficientnet\_b3 & 384 & Trained \\
+            2 & tf\_efficientnet\_b0 & 320 & Trained \\
+            3 & eca\_nfnet\_l0 & 2304 & Trained \\
+            4 & tf\_efficientnet\_b4 & 448 & Pretrained \\
+            5 & regnety\_016 & 888 & Pretrained \\
+            6 & regnety\_008 & 768 & Pretrained \\
             \bottomrule
         \end{tabular}
     \end{center}
 
-    \vspace{0.5cm}
     \begin{columns}[T, onlytextwidth]
-        \begin{column}{0.46\textwidth}
-            \begin{block}{Ensemble Strategy}
-                \small
-                \textbf{Arithmetic Mean} of softmax:
-                $$\hat{p} = \frac{1}{6}\sum_{m=1}^{6} p^{(m)}$$
-            \end{block}
+        \begin{column}{0.48\textwidth}
+            \begin{tcolorbox}[draculabox={Strategy}]
+                \scriptsize \textbf{Arithmetic Mean} of sigmoid outputs.
+            \end{tcolorbox}
         \end{column}
-        \begin{column}{0.46\textwidth}
-            \begin{alertblock}{Why Diverse Models?}
-                \small
-                \begin{itemize}
-                    \item Different inductive biases
-                    \item Error decorrelation
-                    \item Robust to distribution shift
-                \end{itemize}
-            \end{alertblock}
+        \begin{column}{0.48\textwidth}
+            \begin{tcolorbox}[orangebox_tcb={Why?}]
+                \scriptsize Error Decorrelation $\cdot$ Robustness.
+            \end{tcolorbox}
         \end{column}
     \end{columns}
 \end{frame}
@@ -675,48 +697,31 @@
 \section{Results}
 % ============================================
 
-% ------------------------------------------
-% Performance Results
-% ------------------------------------------
 \begin{frame}{Performance Results}
     \begin{center}
-        \small
+        \scriptsize
         \begin{tabular}{lccc}
             \toprule
-            \textbf{Model} & \textbf{Top-1 Acc} & \textbf{Top-5 Acc} & \textbf{vs Random} \\
+            \textbf{Model} & \textbf{Top-1 Acc} & \textbf{Top-5 Acc} & \textbf{Gain} \\
             \midrule
             Random Baseline & 0.49\% & 2.43\% & 1$\times$ \\
-            \midrule
-            Base Model (EfficientNet-B3 SED) & 60.07\% & 80.34\% & 122.6$\times$ \\
+            Base (EfficientNet-B3) & 60.07\% & 80.34\% & 122$\times$ \\
             \rowcolor{draculacurrent}
-            \textbf{6-Model Ensemble} & \textbf{87.99\%} & \textbf{95.99\%} & \textbf{179.6$\times$} \\
+            \textbf{6-Model Ensemble} & \textbf{87.99\%} & \textbf{95.99\%} & \textbf{180$\times$} \\
             \bottomrule
         \end{tabular}
     \end{center}
 
-    \vspace{0.5cm}
     \begin{columns}[T, onlytextwidth]
-        \begin{column}{0.46\textwidth}
-            \begin{block}{Key Achievements}
-                \small
-                \begin{itemize}
-                    \item \textbf{+28\%} improvement from ensemble
-                    \item \textbf{181$\times$} better than random
-                    \item 206 species classified
-                    \item Real-time inference capability
-                \end{itemize}
-            \end{block}
+        \begin{column}{0.48\textwidth}
+            \begin{tcolorbox}[greenbox_tcb={Achievements}]
+                \scriptsize \textbf{+28\%} from ensemble $\cdot$ \textbf{181$\times$} vs random.
+            \end{tcolorbox}
         \end{column}
-        \begin{column}{0.46\textwidth}
-            \begin{exampleblock}{Technique Contributions}
-                \small
-                \begin{itemize}
-                    \item SED Architecture: Foundation
-                    \item Data Augmentation: +5\% acc
-                    \item Ensemble: +3\% acc
-                    \item TTA + Smoothing: +0.5\% acc
-                \end{itemize}
-            \end{exampleblock}
+        \begin{column}{0.48\textwidth}
+            \begin{tcolorbox}[draculabox={Contributions}]
+                \tiny Augmentation (+5\%) $\cdot$ Ensemble (+3\%) $\cdot$ TTA (+0.5\%)
+            \end{tcolorbox}
         \end{column}
     \end{columns}
 \end{frame}
@@ -726,113 +731,121 @@
 % ------------------------------------------
 \begin{frame}{Sample Audio Predictions}
     \begin{center}
-        \small
+        \scriptsize
         \begin{tabular}{lllr}
             \toprule
-            \textbf{Audio File} & \textbf{True Species} & \textbf{Top Prediction} & \textbf{Confidence} \\
+            \textbf{Audio File} & \textbf{True} & \textbf{Top Pred} & \textbf{Conf.} \\
             \midrule
-            XC254589.ogg & amekes & amekes & \textcolor{green!60!black}{\textbf{84.3\%}} \\
-            XC493187.ogg & ywcpar & ywcpar & \textcolor{green!60!black}{\textbf{53.0\%}} \\
-            XC449442.ogg & savhaw1 & savhaw1 & 22.8\% \\
-            XC171396.ogg & smbani & strher & \textcolor{red}{11.7\%} \\
-            XC82494.ogg & bobfly1 & crbtan1 & \textcolor{red}{61.6\%} \\
+            XC254589 & amekes & amekes & \textcolor{draculagreen}{\textbf{84.3\%}} \\
+            XC493187 & ywcpar & ywcpar & \textcolor{draculagreen}{\textbf{53.0\%}} \\
+            XC449442 & savhaw1 & savhaw1 & 22.8\% \\
+            XC171396 & smbani & strher & \textcolor{draculared}{11.7\%} \\
             \bottomrule
         \end{tabular}
     \end{center}
 
-    \vspace{0.2cm}
-    \begin{alertblock}{Observations}
-        \small
-        \begin{itemize}
-            \item High confidence for clear recordings (84.3\%)
-            \item Confusions occur for acoustically similar species
-            \item Rare species remain challenging (class imbalance)
-        \end{itemize}
-    \end{alertblock}
+    \begin{tcolorbox}[orangebox_tcb={Observation}]
+        \scriptsize High confidence for clear calls; confusions in acoustic similarity.
+    \end{tcolorbox}
 \end{frame}
 
 % ============================================
 \section{Summary}
 % ============================================
 
-% ------------------------------------------
-% Techniques Summary
-% ------------------------------------------
 \begin{frame}[t]{All Techniques Implemented}
     \footnotesize
     \begin{multicols}{2}
-        \textbf{Architecture:}
+        \textbf{\textcolor{draculapink}{Architecture:}}
         \begin{enumerate}
-            \item SED (GeMFreq + AttHead)
-            \item 20s chunks, 224 mel bands
-            \item Z-score + min-max normalization
-            \item Absmax audio normalization
+            \item \tiny SED (GeMFreq + AttHead)
+            \item \tiny 20s chunks, 224 mel bands
+            \item \tiny Z-score + min-max norm
+            \item \tiny Absmax audio norm
         \end{enumerate}
 
-        \textbf{Training:}
+        \textbf{\textcolor{draculapink}{Training:}}
         \begin{enumerate}
             \setcounter{enumi}{4}
-            \item Mixup augmentation
-            \item SpecAugment
-            \item Weighted Random Sampling
-            \item Stochastic Depth (DropPath)
-            \item Multi-Iterative Noisy Student
-            \item CrossEntropy + label smoothing
-            \item AdamW + CosineAnnealing
+            \item \tiny Mixup augmentation
+            \item \tiny SpecAugment
+            \item \tiny Weighted Random Sampling
+            \item \tiny Stochastic Depth (DropPath)
+            \item \tiny Multi-Iterative Noisy Student
+            \item \tiny CE + Label Smoothing
+            \item \tiny AdamW + CosineAnnealing
         \end{enumerate}
 
         \columnbreak
 
-        \textbf{Inference:}
+        \textbf{\textcolor{draculapink}{Inference:}}
         \begin{enumerate}
             \setcounter{enumi}{11}
-            \item Overlap-Average Inference
-            \item Delta-Shift TTA
-            \item Gaussian Smoothing
-            \item Multi-Model Ensemble
+            \item \tiny Overlap-Average Inference
+            \item \tiny Delta-Shift TTA
+            \item \tiny Gaussian Smoothing
+            \item \tiny Multi-Model Ensemble
         \end{enumerate}
 
         \vspace{0.2cm}
         \begin{center}
-            \textcolor{birdgreen}{\Large \textbf{15 Techniques}}
+            \begin{tcolorbox}[greenbox_tcb={}, width=3.5cm, center, sharp corners]
+                \centering \small \textbf{15 Techniques}
+            \end{tcolorbox}
         \end{center}
     \end{multicols}
 \end{frame}
 
-% ------------------------------------------
-% Conclusion
-% ------------------------------------------
 \begin{frame}[t]{Conclusion}
     \centering
-    \begin{minipage}{0.6\textwidth}
-        \begin{block}{Key Achievements}
-            \footnotesize
+    \begin{minipage}{0.7\textwidth}
+        \begin{tcolorbox}[draculabox={Key Takeaways}]
+            \small
             \begin{itemize}
-                \item Complete SED implementation
-                \item State-of-the-art: \textbf{87.99\%}
-                \item 6-model diverse ensemble
-                \item 15 advanced techniques
-                \item Modular, extensible code
+                \item \textbf{87.99\%} Accuracy achieved.
+                \item 15 Advanced techniques integrated.
+                \item Robust SED architecture.
+                \item 6-Model Diverse Ensemble.
             \end{itemize}
-        \end{block}
+        \end{tcolorbox}
     \end{minipage}
 
-    \vspace{0.5cm}
-    \begin{exampleblock}{Real-World Applications}
-        \centering \footnotesize Biodiversity Monitoring $\cdot$ Automated Surveys $\cdot$ Climate Change
-    \end{exampleblock}
+    \vspace{0.4cm}
+    \begin{tcolorbox}[greenbox_tcb={Impact}]
+        \centering \small Biodiversity Monitoring $\cdot$ Automated Field Surveys
+    \end{tcolorbox}
 \end{frame}
 
 % ------------------------------------------
 % Thank You
 % ------------------------------------------
-\setbeamercolor{palette primary}{bg=draculapurple, fg=draculabg}
-\begin{frame}[standout]
-    \Huge Thank You!
-    
-    \vspace{1cm}
-    \normalsize
-    Questions?
+\begin{frame}[plain]
+    \begin{tikzpicture}[remember picture, overlay]
+        \fill[draculabg] (current page.south west) rectangle (current page.north east);
+        
+        % Dynamic soundwave
+        \begin{scope}
+            \foreach \i in {1,...,60} {
+                \pgfmathsetmacro{\h}{rnd*3}
+                \pgfmathsetmacro{\op}{0.05 + rnd*0.15}
+                \draw[draculagreen, opacity=\op, line width=1.5pt] ($(current page.west) + (\i*0.27 - 8, 0)$) -- ++(0, \h);
+                \draw[draculapink, opacity=\op, line width=1.5pt] ($(current page.west) + (\i*0.27 - 8, 0)$) -- ++(0, -\h);
+            }
+        \end{scope}
+
+        \node[anchor=center] at (current page.center) {
+            \begin{tcolorbox}[
+                enhanced, colback=draculabg, colframe=draculapurple,
+                arc=10pt, boxrule=2pt, width=8cm, center,
+                drop fuzzy shadow, opacityback=0.8
+            ]
+                \centering
+                \Huge \textbf{\textcolor{draculafg}{Thank You!}} \\
+                \vspace{0.4cm}
+                \Large \textcolor{draculacyan}{Questions?}
+            \end{tcolorbox}
+        };
+    \end{tikzpicture}
 \end{frame}
 
 \end{document}
